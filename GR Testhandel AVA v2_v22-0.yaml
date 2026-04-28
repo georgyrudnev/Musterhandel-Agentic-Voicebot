@@ -1,0 +1,1991 @@
+botFlow:
+  name: GR Testhandel AVA v2
+  description: ""
+  division: Georgy
+  startUpRef: "/botFlow/bots/bot[Standard-Bot_10]"
+  defaultLanguage: de-de
+  supportedLanguages:
+    de-de:
+      defaultLanguageSkill:
+        noValue: true
+      speechToText:
+        engine:
+          name: Genesys Enhanced v2
+          defaultEngine: true
+    en-us:
+      defaultLanguageSkill:
+        noValue: true
+      speechToText:
+        engine:
+          name: Genesys Enhanced v2
+          defaultEngine: true
+  variables:
+    - booleanVariable:
+        name: Flow.AdresseNennen
+        initialValue:
+          lit: false
+        isInput: false
+        isOutput: false
+    - stringVariable:
+        name: Flow.Anliegen
+        initialValue:
+          noValue: true
+        isInput: false
+        isOutput: false
+    - integerVariable:
+        name: Flow.Anliegen_Versuch
+        initialValue:
+          noValue: true
+        isInput: false
+        isOutput: false
+    - stringVariable:
+        name: Flow.exitReason
+        initialValue:
+          noValue: true
+        isInput: false
+        isOutput: false
+    - integerVariable:
+        name: Flow.i
+        initialValue:
+          noValue: true
+        isInput: false
+        isOutput: false
+    - stringVariable:
+        name: Flow.intent
+        initialValue:
+          noValue: true
+        isInput: false
+        isOutput: false
+    - stringVariable:
+        name: Flow.Markt_DT
+        initialValue:
+          noValue: true
+        isInput: false
+        isOutput: false
+    - stringVariable:
+        name: Flow.MarktPLZ_DT
+        initialValue:
+          noValue: true
+        isInput: false
+        isOutput: false
+    - stringVariable:
+        name: Flow.MarktStadt_DT
+        initialValue:
+          noValue: true
+        isInput: false
+        isOutput: false
+    - integerVariable:
+        name: Flow.Product_Q_AVA
+        initialValue:
+          noValue: true
+        isInput: false
+        isOutput: false
+    - integerVariable:
+        name: Flow.Telefon_Kundenservice
+        initialValue:
+          noValue: true
+        isInput: false
+        isOutput: false
+    - integerVariable:
+        name: Flow.y
+        initialValue:
+          noValue: true
+        isInput: false
+        isOutput: false
+    - stringVariable:
+        name: Slot.erkanntePLZ
+        initialValue:
+          noValue: true
+        isInput: true
+        isOutput: true
+    - stringVariable:
+        name: Slot.Märkte
+        initialValue:
+          noValue: true
+        isInput: true
+        isOutput: true
+    - stringVariable:
+        name: Slot.OrderNo1
+        initialValue:
+          noValue: true
+        isInput: true
+        isOutput: true
+    - stringVariable:
+        name: Slot.Produktkategorie_Essen
+        initialValue:
+          noValue: true
+        isInput: true
+        isOutput: true
+    - stringVariable:
+        name: Slot.Produktname
+        initialValue:
+          noValue: true
+        isInput: true
+        isOutput: true
+    - stringVariable:
+        name: Slot.Produkttyp
+        initialValue:
+          noValue: true
+        isInput: true
+        isOutput: true
+    - decimalVariable:
+        name: Slot.Telefon_Kundenservice
+        initialValue:
+          noValue: true
+        isInput: true
+        isOutput: true
+  settingsActionDefaults:
+    callGuide:
+      voiceProcessingPrompt:
+        exp: MakeCommunication(PromptSystem.processing_keyboard)
+    askForIntent:
+      voiceEndOfInputTimeout:
+        lit:
+          seconds: 1
+    askForSlot:
+      voiceEndOfInputTimeout:
+        lit:
+          seconds: 1
+    askForBoolean:
+      voiceEndOfInputTimeout:
+        lit:
+          seconds: 1
+    loopAnythingElse:
+      voiceEndOfInputTimeout:
+        lit:
+          seconds: 1
+  settingsErrorHandling:
+    errorHandling:
+      exit:
+        none: true
+    enableAgentEscalation:
+      lit: true
+    errorEventHandover:
+      exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"An error occurred. Let me connect you to a real person.\"), \n    MakeCommunication(\n      \"Leider ist ein Fehler aufgetreten. Bitte warten Sie kurz, ich werde Sie zu einer Person durchstellen, die Ihnen helfen kann.\")), \n  MakeCommunication(\n    \"Leider ist ein Fehler aufgetreten. Bitte warten Sie kurz, ich werde Sie zu einer Person durchstellen, die Ihnen helfen kann.\"))"
+    agentEscalationConfirmation:
+      exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"You want to talk to our representative. Is that correct?\"), \n    MakeCommunication(\n      \"Sie möchten mit einem Berater sprechen. Ist das richtig?\")), \n  MakeCommunication(\n    \"Sie möchten mit einem Berater sprechen. Ist das richtig?\"))"
+    agentEscalationHandover:
+      exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"Please wait a second while I connect you.\"), \n    MakeCommunication(\n      \"Bitte warten Sie kurz, ich werde Sie durchstellen.\")), \n  MakeCommunication(\n    \"Bitte warten Sie kurz, ich werde Sie durchstellen.\"))"
+    recognitionFailureEventHandover:
+      exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"I cannot understand you. Let me connect you to a real person.\"), \n    MakeCommunication(\n      \"Ich kann Sie leider nur schlecht verstehen. Bitte warten Sie kurz, ich werde Sie zu einer Person durchstellen, die Ihnen helfen kann.\")), \n  MakeCommunication(\n    \"Ich kann Sie leider nur schlecht verstehen. Bitte warten Sie kurz, ich werde Sie zu einer Person durchstellen, die Ihnen helfen kann.\"))"
+    recognitionFailureEventHandling:
+      exit:
+        none: true
+    agentEscalationHandling:
+      exit:
+        none: true
+  settingsPrompts:
+    ensureAudioInPrompts: false
+    promptMediaToValidate:
+      - mediaType: audio
+      - mediaType: tts
+  tasks:
+    - task:
+        name: PLZ Zuordnung
+        refId: PLZ Zuordnung_53
+        actions:
+          - updateData:
+              name: Remove whitespace
+              statements:
+                - string:
+                    variable: Slot.erkanntePLZ
+                    value:
+                      exp: Replace(Slot.erkanntePLZ, " ", "")
+          - switch:
+              name: Länge PLZ Eingabe
+              evaluate:
+                firstTrue:
+                  default:
+                    actions:
+                      - endTask:
+                          name: End Task
+                          outputPath:
+                            name: Fehler
+                  cases:
+                    - case:
+                        value:
+                          exp: Length(Slot.erkanntePLZ) == 5
+                    - case:
+                        value:
+                          exp: Length(Slot.erkanntePLZ) == 4
+                        actions:
+                          - updateData:
+                              name: Füge 0 an Anfang
+                              statements:
+                                - string:
+                                    variable: Slot.erkanntePLZ
+                                    value:
+                                      exp: "\"0\" + Slot.erkanntePLZ"
+          - communicate:
+              name: Communicate PLZ
+              communication:
+                exp: "MakeCommunication(\n  \"Ich suche jetzt einen Markt in ihrer Nähe für ihre P.L.Z\", \n  ToCommunication(ResolveSlot(Slot.erkanntePLZ), Format.String.playChars), \n  \"raus\")"
+          - dataTableLookup:
+              name: Data Table Lookup
+              lookupValue:
+                exp: Slot.erkanntePLZ
+              dataTable:
+                Metro:
+                  foundOutputs:
+                    nearest_market_plz:
+                      var: Flow.MarktPLZ_DT
+                    nearest_market_city:
+                      var: Flow.MarktStadt_DT
+                    nearest_market_name:
+                      var: Flow.Markt_DT
+                  failureOutputs:
+                    errorType:
+                      noValue: true
+                    errorMessage:
+                      noValue: true
+              outputs:
+                found:
+                  actions:
+                    - askForBoolean:
+                        name: Ask for Yes / No
+                        question:
+                          exp: "MakeCommunication(\n  \"Soll ich Sie mit\", \n  ToCommunication(Flow.Markt_DT), \n  \"in \", \n  ToCommunication(Flow.MarktStadt_DT), \n  ToCommunication(Flow.MarktPLZ_DT, Format.String.playChars), \n  \"verbinden?\")"
+                        noInput:
+                          exp: "MakeCommunication(\n  \"Sagen Sie \\\"ja\\\", wenn Sie fortfahren möchten, oder \\\"nein\\\", wenn nicht.\")"
+                        noMatch:
+                          exp: "MakeCommunication(\n  \"Sagen Sie \\\"Ja\\\" oder \\\"Nein\\\". Möchten Sie fortfahren?\")"
+                        voiceEndOfInputTimeout:
+                          noValue: true
+                        outputs:
+                          "yes":
+                            actions:
+                              - communicate:
+                                  name: Communicate
+                                  communication:
+                                    exp: "MakeCommunication(\n  \"Verbindung erfolgreich!\")"
+                          "no":
+                            actions:
+                              - communicate:
+                                  name: Communicate
+                                  communication:
+                                    exp: "MakeCommunication(\n  \"Sie haben Nein ausgewählt.\")"
+                              - clearSlot:
+                                  name: Clear Slot
+                                  slots:
+                                    - slot:
+                                        name: erkanntePLZ
+                                    - slot:
+                                        name: Märkte
+                              - endTask:
+                                  name: End Task
+                                  outputPath:
+                                    name: Anderer Markt
+                          maxNoInputs:
+                            enabled: false
+                          maxNoMatches:
+                            enabled: false
+                    - endTask:
+                        name: End Task
+                        outputPath:
+                          name: default
+                notFound:
+                  actions:
+                    - communicate:
+                        name: Communicate
+                        communication:
+                          exp: "MakeCommunication(\n  \"Ich habe ihre P.L.Z leider nicht gefunden. \", \n  \"Versuchen Sie es mit einer anderen PLZ.\")"
+                    - clearSlot:
+                        name: Clear Slot
+                        slots:
+                          - slot:
+                              name: erkanntePLZ
+                          - slot:
+                              name: Märkte
+                    - endTask:
+                        name: End Task
+                        outputPath:
+                          name: Anderer Markt
+                failure:
+                  actions:
+                    - communicate:
+                        name: Communicate
+                        communication:
+                          exp: "MakeCommunication(\n  \"Mir ist ein Fehler passiert.\")"
+                    - endTask:
+                        name: End Task
+                        outputPath:
+                          name: Fehler
+        outputPaths:
+          - outputPath:
+              name: Fehler
+          - outputPath:
+              name: Anderer Markt
+  settingsBotFlow:
+    voiceProcessingPrompt:
+      noValue: true
+    initialPlaybackDelay:
+      lit:
+        ms: 100
+    minimumPlaybackTime:
+      lit:
+        seconds: 1
+    intentSettings:
+      - intent:
+          confirmation:
+            exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"I think you want to contact your market, is that correct?\"), \n    MakeCommunication(\n      \"Ich glaube, Sie möchten einen Markt kontaktieren. Ist das korrekt?\")), \n  MakeCommunication(\n    \"Ich glaube, Sie möchten einen Markt kontaktieren. Ist das korrekt?\"))"
+          name: Markt kontaktieren
+      - intent:
+          confirmation:
+            exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"I think you need information around a product, is that correct?\"), \n    MakeCommunication(\n      \"Ich glaube, Sie möchten Information zu einem Produkt. Ist das korrekt?\")), \n  MakeCommunication(\n    \"Ich glaube, Sie möchten Information zu einem Produkt. Ist das korrekt?\"))"
+          name: Produktinformation
+      - intent:
+          confirmation:
+            exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"You have an inquiry around our memberships, is that correct?\"), \n    MakeCommunication(\n      \"Ich glaube, Sie haben ein Anliegen zu ihrem Kundenprofil. Ist das korrekt?\")), \n  MakeCommunication(\n    \"Ich glaube, Sie haben ein Anliegen zu ihrem Kundenprofil. Ist das korrekt?\"))"
+          name: Profil
+      - intent:
+          confirmation:
+            exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"I think you have a question around your delivery. Is that correct?\"), \n    MakeCommunication(\n      \"Ich glaube, Sie haben eine Frage zu Ihrer Lieferung. Ist das korrekt?\")), \n  MakeCommunication(\n    \"Ich glaube, Sie haben eine Frage zu Ihrer Lieferung. Ist das korrekt?\"))"
+          name: Lieferung
+      - intent:
+          confirmation:
+            exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"I understood you want to become our member, is that correct?\"), \n    MakeCommunication(\n      \"Ich glaube, Sie möchten Registrierung. Ist das korrekt?\")), \n  MakeCommunication(\n    \"Ich glaube, Sie möchten Registrierung. Ist das korrekt?\"))"
+          name: Registrierung
+      - intent:
+          confirmation:
+            exp: "MakeCommunication(\n  \"Ich glaube, Sie möchten Marktverfügbarkeit. Ist das korrekt?\")"
+          name: Marktverfügbarkeit
+      - intent:
+          confirmation:
+            exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"I think you want to find the next market, is that correct?\"), \n    MakeCommunication(\n      \"Ich glaube, Sie möchten Marktstandort. Ist das korrekt?\")), \n  MakeCommunication(\n    \"Ich glaube, Sie möchten Marktstandort. Ist das korrekt?\"))"
+          name: Marktstandort
+    virtualAgentEnabled: true
+  settingsUserInput:
+    enableBargeIn:
+      lit: true
+    enableAutomaticQuickReplies:
+      lit: true
+    noMatchesMax:
+      lit: 1
+    noInputsMax:
+      lit: 2
+    noInputsTimeout:
+      lit:
+        seconds: 6
+    speechToTextSpeechDetectionSensitivity:
+      noValue: true
+    speechToTextMaxSpeechTimeout:
+      noValue: true
+    enableIntentClassificationHinting:
+      lit: false
+    interDigitTimeout:
+      lit:
+        seconds: 3
+    dtmfTerminatingCharacter:
+      noValue: true
+    confirmationRejectionsMax:
+      lit: 2
+    collectionLowConfidenceThreshold:
+      exp: ToInt(20)
+    collectionHighConfidenceThreshold:
+      exp: ToInt(20)
+    confirmationLowConfidenceThreshold:
+      lit: 24
+    noMatchApology:
+      exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"Sorry.\"), \n    MakeCommunication(\n      \"Entschuldigen Sie bitte.\")), \n  MakeCommunication(\n    \"Entschuldigen Sie bitte.\"))"
+    noInputApology:
+      exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"I did not hear you.\"), \n    MakeCommunication(\n      \"Ich habe Sie leider nicht gehört.\")), \n  MakeCommunication(\n    \"Ich habe Sie leider nicht gehört.\"))"
+    noToConfirmationApology:
+      exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"An error occurred\"), \n    MakeCommunication(\n      \"Mir ist ein Fehler unterlaufen.\")), \n  MakeCommunication(\n    \"Mir ist ein Fehler unterlaufen.\"))"
+    confirmationNoMatchApology:
+      exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"Please answer yes or no\"), \n    MakeCommunication(\n      \"Bitte antworten Sie mit 'Ja' oder 'Nein'.\")), \n  MakeCommunication(\n    \"Bitte antworten Sie mit 'Ja' oder 'Nein'.\"))"
+    confirmationNoInputApology:
+      exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"I did not hear you. Please answer yes or no.\"), \n    MakeCommunication(\n      \"Ich habe Sie leider nicht gehört. Bitte antworten Sie mit 'Ja' oder 'Nein'.\")), \n  MakeCommunication(\n    \"Ich habe Sie leider nicht gehört. Bitte antworten Sie mit 'Ja' oder 'Nein'.\"))"
+  settingsKnowledge:
+    GR Öffnungszeiten v2:
+      knowledgeVersion:
+        lit: v2
+      maxNumOfAnswersReturned:
+        lit: 1
+      knowledgeInitialResponseSingle:
+        noValue: true
+      knowledgeAnswerContentType:
+        lit: standard
+      sendKnowledgeFeedback:
+        lit: true
+      knowledgeConfirmation:
+        exp: "MakeCommunication(\n  \"Hat dies Ihre Frage beantwortet?\")"
+      responseBias:
+        lit: neutral
+      knowledgeSettingsMode:
+        lit: standard
+  settingsVirtualAgent:
+    summarization:
+      lit: false
+    assignWrapupCodes:
+      lit: false
+  bots:
+    - bot:
+        name: Standard-Bot
+        refId: Standard-Bot_10
+        actions:
+          - updateData:
+              name: Daten aktualisieren
+              statements:
+                - integer:
+                    variable: Flow.Telefon_Kundenservice
+                    value:
+                      lit: 4915237709704
+          - callAgenticVirtualAgent:
+              name: Agentenbasierten virtuellen Agenten anrufen
+              agenticVirtualAgent:
+                Großhandel Markt Finder & Registrierung:
+                  ver_latestPublished:
+                    inputs:
+                      worktypeid_kartenbestellung:
+                        noValue: true
+                      kunden_anliegen:
+                        noValue: true
+                      kunde_plz:
+                        noValue: true
+                      zweiter_kontakt:
+                        noValue: true
+                    exitReason:
+                      var: Flow.exitReason
+              outputs:
+                success:
+                  actions:
+                    - switch:
+                        name: Switch
+                        evaluate:
+                          firstTrue:
+                            default:
+                              actions:
+                                - disconnect:
+                                    name: Trennen
+                            cases:
+                              - case:
+                                  value:
+                                    exp: Flow.exitReason == "Escalation"
+                                  actions:
+                                    - transferToNumber:
+                                        name: An Nummer weiterleiten
+                                        targetNumber:
+                                          lit: "+4915237709704"
+                                        preTransferCommunication:
+                                          exp: "MakeCommunication(\n  \"\")"
+                                        failureTransferCommunication:
+                                          exp: "MakeCommunication(\n  \"\")"
+                                        failureOutputs:
+                                          errorType:
+                                            noValue: true
+                                          errorMessage:
+                                            noValue: true
+                                        outputs:
+                                          failure:
+                                            actions:
+                                              - communicate:
+                                                  name: Kommunizieren
+                                                  communication:
+                                                    exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"I could not connect you. Please call yourself at the following number:   \", \n      ToCommunicationBlank(1000), \n      \"plus\", \n      ToCommunication(ResolveSlot(Slot.Telefon_Kundenservice), Format.Number.playDigits)), \n    MakeCommunication(\n      \"Ich konnte Sie leider nicht verbinden. Bitte rufen Sie selbst an unter der folgenden Nummer\", \n      ToCommunicationBlank(1000), \n      \"plus \", \n      ToCommunication(ResolveSlot(Slot.Telefon_Kundenservice), Format.Number.playDigits))), \n  MakeCommunication(\n    \"Ich konnte Sie leider nicht verbinden. Bitte rufen Sie selbst an unter der folgenden Nummer\", \n    ToCommunicationBlank(1000), \n    \"plus \", \n    ToCommunication(ResolveSlot(Slot.Telefon_Kundenservice), Format.Number.playDigits)))"
+          - loop:
+              name: Schleife
+              currentIndex:
+                var: Flow.Anliegen_Versuch
+              loopCount:
+                lit: 2
+              outputs:
+                loop:
+                  actions:
+                    - askForIntent:
+                        name: Anliegen
+                        question:
+                          exp: "If(AreEqual(true, Session.Language, \"de-de\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"Hallo. Haben Sie eine Frage zu einem Produkt oder möchten Sie mit Ihrem Metro Markt verbunden werden?\"), \n    MakeCommunication(\n      \"Haben Sie eine Frage zu einem Produkt oder möchten Sie mit Ihrem Handelsmarkt verbunden werden?\")), \n  If(AreEqual(true, Session.Language, \"en-us\"), \n    ToMultimodalCommunication(\n      MakeCommunication(\n        \"Do you have a question around a product or do you want to be connected to your trading-market?\"), \n      MakeCommunication(\n        \"Haben Sie eine Frage zu einem Produkt oder möchten Sie mit Ihrem Handelsmarkt verbunden werden?\")), \n    MakeCommunication(\n      \"Haben Sie eine Frage zu einem Produkt oder möchten Sie mit Ihrem Handelsmarkt verbunden werden?\")))"
+                        knowledgeSearchResult:
+                          noValue: true
+                        noInput:
+                          exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"Describe your intent with a short sentence like \\\"Connect me to my market\\\" or \\\"Have a question about a product\\\"\"), \n    MakeCommunication(\n      \"Beschreiben deine Anfrage mit einem kurzen Satz, z. B. \\\"Frage zum Markt\\\" oder \\\"Produktinformation\\\"..\")), \n  MakeCommunication(\n    \"Beschreiben deine Anfrage mit einem kurzen Satz, z. B. \\\"Frage zum Markt\\\" oder \\\"Produktinformation\\\"..\"))"
+                        noMatch:
+                          exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"Please tell me again, what you would like to do\"), \n    MakeCommunication(\n      \"Sagen Sie mir bitte erneut, was Sie tun möchten.\")), \n  MakeCommunication(\n    \"Sagen Sie mir bitte erneut, was Sie tun möchten.\"))"
+                        voiceEndOfInputTimeout:
+                          noValue: true
+                        outputs:
+                          intents:
+                            - intent:
+                                name: Markt kontaktieren
+                                actions:
+                                  - communicate:
+                                      name: Communicate
+                                      communication:
+                                        exp: "If(AreEqual(true, Session.Language, \"de-de\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"Ich habe verstanden, dass sie einen Markt kontaktieren möchten.\"), \n    MakeCommunication(\n      \"Danke, ich verbinde Sie mit unserer Marktspezialistin\")), \n  If(AreEqual(true, Session.Language, \"en-us\"), \n    ToMultimodalCommunication(\n      MakeCommunication(\n        \"Thanks, let me connect you to our market localization specialist.\"), \n      MakeCommunication(\n        \"Danke, ich verbinde Sie mit unserer Marktspezialistin\")), \n    MakeCommunication(\n      \"Danke, ich verbinde Sie mit unserer Marktspezialistin\")))"
+                                  - callAgenticVirtualAgent:
+                                      name: Agentenbasierten virtuellen Agenten anrufen
+                                      agenticVirtualAgent:
+                                        Großhandel Markt Finder & Registrierung:
+                                          ver_latestPublished:
+                                            inputs:
+                                              worktypeid_kartenbestellung:
+                                                noValue: true
+                                              kunden_anliegen:
+                                                exp: Session.ActiveIntent
+                                              kunde_plz:
+                                                exp: Slot.erkanntePLZ
+                                              zweiter_kontakt:
+                                                noValue: true
+                                            exitReason:
+                                              noValue: true
+                                      outputs:
+                                        success:
+                                          actions:
+                                            - disconnect:
+                                                name: Trennen
+                                        failure:
+                                          actions:
+                                            - communicate:
+                                                name: Kommunizieren
+                                                communication:
+                                                  exp: "If(AreEqual(true, Session.Language, \"de-de\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"Mir ist ein Fehler passiert.\"), \n    MakeCommunication(\n      \"Mir ist ein Fehler passiert. \")), \n  If(AreEqual(true, Session.Language, \"en-us\"), \n    ToMultimodalCommunication(\n      MakeCommunication(\n        \"An error occurred. \"), \n      MakeCommunication(\n        \"Mir ist ein Fehler passiert. \")), \n    MakeCommunication(\n      \"Mir ist ein Fehler passiert. \")))"
+                                            - askForBoolean:
+                                                name: Ja/Nein-Frage stellen
+                                                question:
+                                                  exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  MakeCommunication(\n    \"Do you still want me to connect you with a market?\"), \n  MakeCommunication(\n    \"Soll ich dich weiterhin mit deinem Markt verbinden?\"))"
+                                                noInput:
+                                                  exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  MakeCommunication(\n    \"Say \\\"yes\\\" if you want to proceed or \\\"no\\\" if you don't.\"), \n  MakeCommunication(\n    \"Sagen Sie \\\"ja\\\", wenn Sie fortfahren möchten, oder \\\"nein\\\", wenn nicht.\"))"
+                                                noMatch:
+                                                  exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  MakeCommunication(\n    \"Please say \\\"yes\\\" or \\\"no\\\".  Do you want to proceed?\"), \n  MakeCommunication(\n    \"Sagen Sie \\\"Ja\\\" oder \\\"Nein\\\". Möchten Sie fortfahren?\"))"
+                                                voiceEndOfInputTimeout:
+                                                  lit:
+                                                    seconds: 3
+                                                outputs:
+                                                  "yes":
+                                                    actions:
+                                                      - loopExit:
+                                                          name: Schleife beenden
+                                                  maxNoInputs:
+                                                    enabled: false
+                                                  maxNoMatches:
+                                                    enabled: false
+                                        timeout:
+                                          actions:
+                                            - communicate:
+                                                name: Kommunizieren
+                                                communication:
+                                                  exp: "If(AreEqual(true, Session.Language, \"de-de\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"Mir ist ein Fehler passiert.\"), \n    MakeCommunication(\n      \"Mir ist ein Fehler passiert. \")), \n  If(AreEqual(true, Session.Language, \"en-us\"), \n    ToMultimodalCommunication(\n      MakeCommunication(\n        \"An error occurred. \"), \n      MakeCommunication(\n        \"Mir ist ein Fehler passiert. \")), \n    MakeCommunication(\n      \"Mir ist ein Fehler passiert. \")))"
+                                            - askForBoolean:
+                                                name: Ja/Nein-Frage stellen
+                                                question:
+                                                  exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  MakeCommunication(\n    \"Do you still want me to connect you with a market?\"), \n  MakeCommunication(\n    \"Soll ich dich weiterhin mit deinem Markt verbinden?\"))"
+                                                noInput:
+                                                  exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  MakeCommunication(\n    \"Say \\\"yes\\\" if you want to proceed or \\\"no\\\" if you don't.\"), \n  MakeCommunication(\n    \"Sagen Sie \\\"ja\\\", wenn Sie fortfahren möchten, oder \\\"nein\\\", wenn nicht.\"))"
+                                                noMatch:
+                                                  exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  MakeCommunication(\n    \"Please say \\\"yes\\\" or \\\"no\\\".  Do you want to proceed?\"), \n  MakeCommunication(\n    \"Sagen Sie \\\"Ja\\\" oder \\\"Nein\\\". Möchten Sie fortfahren?\"))"
+                                                voiceEndOfInputTimeout:
+                                                  lit:
+                                                    seconds: 3
+                                                outputs:
+                                                  "yes":
+                                                    actions:
+                                                      - loopExit:
+                                                          name: Schleife beenden
+                                                  maxNoInputs:
+                                                    enabled: false
+                                                  maxNoMatches:
+                                                    enabled: false
+                                enabled: true
+                            - intent:
+                                name: Produktinformation
+                                actions:
+                                  - updateData:
+                                      name: Daten aktualisieren
+                                      statements:
+                                        - string:
+                                            variable: Flow.intent
+                                            value:
+                                              exp: "\"Produktfrage\""
+                                  - loop:
+                                      name: Schleife
+                                      currentIndex:
+                                        var: Flow.Product_Q_AVA
+                                      loopCount:
+                                        lit: 1
+                                      outputs:
+                                        loop:
+                                          actions:
+                                            - callAgenticVirtualAgent:
+                                                name: Agentenbasierten virtuellen Agenten anrufen
+                                                agenticVirtualAgent:
+                                                  Großhandel Markt Finder & Registrierung:
+                                                    ver_latestPublished:
+                                                      inputs:
+                                                        worktypeid_kartenbestellung:
+                                                          noValue: true
+                                                        kunden_anliegen:
+                                                          exp: Session.ActiveIntent
+                                                        kunde_plz:
+                                                          noValue: true
+                                                        zweiter_kontakt:
+                                                          noValue: true
+                                                      exitReason:
+                                                        noValue: true
+                                                outputs:
+                                                  success:
+                                                    actions:
+                                                      - disconnect:
+                                                          name: Trennen
+                                                  failure:
+                                                    actions:
+                                                      - communicate:
+                                                          name: Kommunizieren
+                                                          communication:
+                                                            exp: "If(AreEqual(true, Session.Language, \"de-de\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"Mir ist ein Fehler passiert.\"), \n    MakeCommunication(\n      \"Mir ist ein Fehler passiert. \")), \n  If(AreEqual(true, Session.Language, \"en-us\"), \n    ToMultimodalCommunication(\n      MakeCommunication(\n        \"An error occurred. \"), \n      MakeCommunication(\n        \"Mir ist ein Fehler passiert. \")), \n    MakeCommunication(\n      \"Mir ist ein Fehler passiert. \")))"
+                                                  timeout:
+                                                    actions:
+                                                      - communicate:
+                                                          name: Kommunizieren
+                                                          communication:
+                                                            exp: "If(AreEqual(true, Session.Language, \"de-de\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"Mir ist ein Fehler passiert.\"), \n    MakeCommunication(\n      \"Mir ist ein Fehler passiert. \")), \n  If(AreEqual(true, Session.Language, \"en-us\"), \n    ToMultimodalCommunication(\n      MakeCommunication(\n        \"An error occurred. \"), \n      MakeCommunication(\n        \"Mir ist ein Fehler passiert. \")), \n    MakeCommunication(\n      \"Mir ist ein Fehler passiert. \")))"
+                                            - askForBoolean:
+                                                name: Ja/Nein-Frage stellen
+                                                question:
+                                                  exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  MakeCommunication(\n    \"Do you still want me to connect you with a market?\"), \n  MakeCommunication(\n    \"Soll ich dich weiterhin mit deinem Markt verbinden?\"))"
+                                                noInput:
+                                                  exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  MakeCommunication(\n    \"Say \\\"yes\\\" if you want to proceed or \\\"no\\\" if you don't.\"), \n  MakeCommunication(\n    \"Sagen Sie \\\"ja\\\", wenn Sie fortfahren möchten, oder \\\"nein\\\", wenn nicht.\"))"
+                                                noMatch:
+                                                  exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  MakeCommunication(\n    \"Please say \\\"yes\\\" or \\\"no\\\".  Do you want to proceed?\"), \n  MakeCommunication(\n    \"Sagen Sie \\\"Ja\\\" oder \\\"Nein\\\". Möchten Sie fortfahren?\"))"
+                                                voiceEndOfInputTimeout:
+                                                  lit:
+                                                    seconds: 3
+                                                outputs:
+                                                  "no":
+                                                    actions:
+                                                      - loopExit:
+                                                          name: Schleife beenden
+                                                  maxNoInputs:
+                                                    enabled: false
+                                                  maxNoMatches:
+                                                    enabled: false
+                                enabled: true
+                            - intent:
+                                name: Profil
+                                actions:
+                                  - communicate:
+                                      name: Communicate
+                                      communication:
+                                        exp: "MakeCommunication(\n  \"Sie haben ein Anliegen zum Kundenprofil.\", \n  \"Leider bin ich noch nicht an die Markt Systeme angebunden und kann deshalb nicht weiterhelfen.\", \n  \"Auf Wiederhören.\")"
+                                  - askForBoolean:
+                                      name: Bereits Kunde?
+                                      question:
+                                        exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"Are you already a customer?\"), \n    MakeCommunication(\n      \"Sind Sie bereits Kunde?\")), \n  MakeCommunication(\n    \"Sind Sie bereits Kunde?\"))"
+                                      noInput:
+                                        exp: "MakeCommunication(\n  \"Sagen Sie \\\"ja\\\", wenn Sie fortfahren möchten, oder \\\"nein\\\", wenn nicht.\")"
+                                      noMatch:
+                                        exp: "MakeCommunication(\n  \"Sagen Sie \\\"Ja\\\" oder \\\"Nein\\\". Möchten Sie fortfahren?\")"
+                                      voiceEndOfInputTimeout:
+                                        noValue: true
+                                      outputs:
+                                        "yes":
+                                          actions:
+                                            - communicate:
+                                                name: Kommunizieren
+                                                communication:
+                                                  exp: "If(AreEqual(true, Session.Language, \"de-de\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"Das ist noch nicht implementiert\"), \n    MakeCommunication(\n      \"Das ist noch nicht implementiert\")), \n  If(AreEqual(true, Session.Language, \"en-us\"), \n    ToMultimodalCommunication(\n      MakeCommunication(\n        \"This path is not yet implemented\"), \n      MakeCommunication(\n        \"Das ist noch nicht implementiert\")), \n    MakeCommunication(\n      \"Das ist noch nicht implementiert\")))"
+                                        "no":
+                                          actions:
+                                            - askForBoolean:
+                                                name: Konto erstellen / Registrieren?
+                                                question:
+                                                  exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"Do you want to create a profile?\"), \n    MakeCommunication(\n      \"Möchten Sie eine Kundenkarte beantragen?\")), \n  MakeCommunication(\n    \"Möchten Sie eine Kundenkarte beantragen?\"))"
+                                                noInput:
+                                                  exp: "MakeCommunication(\n  \"Sagen Sie \\\"ja\\\", wenn Sie fortfahren möchten, oder \\\"nein\\\", wenn nicht.\")"
+                                                noMatch:
+                                                  exp: "MakeCommunication(\n  \"Sagen Sie \\\"Ja\\\" oder \\\"Nein\\\". Möchten Sie fortfahren?\")"
+                                                voiceEndOfInputTimeout:
+                                                  noValue: true
+                                                outputs:
+                                                  "yes":
+                                                    actions:
+                                                      - callAgenticVirtualAgent:
+                                                          name: Agentenbasierten virtuellen Agenten anrufen
+                                                          agenticVirtualAgent:
+                                                            Großhandel Markt Finder & Registrierung:
+                                                              ver_latestPublished:
+                                                                inputs:
+                                                                  worktypeid_kartenbestellung:
+                                                                    noValue: true
+                                                                  kunden_anliegen:
+                                                                    lit: Registrierung Neuer Kunde
+                                                                  kunde_plz:
+                                                                    noValue: true
+                                                                  zweiter_kontakt:
+                                                                    noValue: true
+                                                                exitReason:
+                                                                  noValue: true
+                                                          outputs:
+                                                            failure:
+                                                              actions:
+                                                                - communicate:
+                                                                    name: Kommunizieren
+                                                                    communication:
+                                                                      exp: "If(AreEqual(true, Session.Language, \"de-de\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"Mir ist ein Fehler passiert.\"), \n    MakeCommunication(\n      \"Mir ist ein Fehler passiert. \")), \n  If(AreEqual(true, Session.Language, \"en-us\"), \n    ToMultimodalCommunication(\n      MakeCommunication(\n        \"An error occurred. \"), \n      MakeCommunication(\n        \"Mir ist ein Fehler passiert. \")), \n    MakeCommunication(\n      \"Mir ist ein Fehler passiert. \")))"
+                                                            timeout:
+                                                              actions:
+                                                                - communicate:
+                                                                    name: Kommunizieren
+                                                                    communication:
+                                                                      exp: "If(AreEqual(true, Session.Language, \"de-de\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"Mir ist ein Fehler passiert.\"), \n    MakeCommunication(\n      \"Mir ist ein Fehler passiert. \")), \n  If(AreEqual(true, Session.Language, \"en-us\"), \n    ToMultimodalCommunication(\n      MakeCommunication(\n        \"An error occurred. \"), \n      MakeCommunication(\n        \"Mir ist ein Fehler passiert. \")), \n    MakeCommunication(\n      \"Mir ist ein Fehler passiert. \")))"
+                                                  maxNoInputs:
+                                                    enabled: false
+                                                  maxNoMatches:
+                                                    enabled: false
+                                        maxNoInputs:
+                                          enabled: false
+                                        maxNoMatches:
+                                          enabled: false
+                                  - disconnect:
+                                      name: Disconnect
+                                enabled: true
+                            - intent:
+                                name: Lieferung
+                                actions:
+                                  - communicate:
+                                      name: Tracking - ID
+                                      communication:
+                                        exp: "MakeCommunication(\n  \"Ich habe verstanden, dass Sie eine Frage zu einer Lieferung haben.\", \n  \"Leider bin ich noch nicht an die Systeme angebunden und kann deshalbe nicht weiterhelfen.\", \n  \"Auf Wiederhören.\")"
+                                  - callAgenticVirtualAgent:
+                                      name: Call Agentic Virtual Agent
+                                      agenticVirtualAgent:
+                                        Großhandel Markt Finder & Registrierung:
+                                          ver_latestPublished:
+                                            inputs:
+                                              worktypeid_kartenbestellung:
+                                                noValue: true
+                                              kunden_anliegen:
+                                                lit: "\"Bestellung nachverfolgen\""
+                                              kunde_plz:
+                                                noValue: true
+                                              zweiter_kontakt:
+                                                noValue: true
+                                            exitReason:
+                                              noValue: true
+                                      outputs:
+                                        success:
+                                          actions:
+                                            - loopNext:
+                                                name: Next Loop
+                                  - decision:
+                                      name: Entscheidung
+                                      condition:
+                                        exp: isNotSetOrEmpty(Slot.OrderNo1)
+                                      outputs:
+                                        "yes":
+                                          actions:
+                                            - askForSlot:
+                                                name: Order No
+                                                slot:
+                                                  name: OrderNo
+                                                question:
+                                                  exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"What is your\", \n      \"order number?\", \n      \"?\", \n      \"It starts with H.C.L.U. followed by 7 digits\"), \n    MakeCommunication(\n      \"Was ist ihre\", \n      \"Bestellnummer\", \n      \"?\", \n      \"Sie beginnt mit H.C.L.U. und dann 7 Zahlen\")), \n  MakeCommunication(\n    \"Was ist ihre\", \n    \"Bestellnummer\", \n    \"?\", \n    \"Sie beginnt mit H.C.L.U. und dann 7 Zahlen\"))"
+                                                customValidation:
+                                                  noValue: true
+                                                confirmationMode:
+                                                  lit: never
+                                                noInput:
+                                                  exp: "MakeCommunication(\n  \"Bitte nennen Sie Folgendes, oder geben Sie Folgendes ein:\", \n  \"(Slot-Name hier einfügen)\")"
+                                                noMatch:
+                                                  exp: "MakeCommunication(\n  \"Bitte nennen Sie\", \n  \"(Slot-Name hier einfügen)\")"
+                                                voiceEndOfInputTimeout:
+                                                  noValue: true
+                                                outputs:
+                                                  maxNoInputs:
+                                                    enabled: false
+                                                  maxNoMatches:
+                                                    enabled: false
+                                            - callAgenticVirtualAgent:
+                                                name: Call Agentic Virtual Agent
+                                                agenticVirtualAgent:
+                                                  Großhandel Markt Finder & Registrierung:
+                                                    ver_latestPublished:
+                                                      inputs:
+                                                        worktypeid_kartenbestellung:
+                                                          noValue: true
+                                                        kunden_anliegen:
+                                                          exp: "Trim(Append(\n    \"Bestellung nachverfolgen mit folgender Bestellnummer\", \n    \" \", \n    ToDisplayString(ResolveSlot(Slot.OrderNo1))))"
+                                                        kunde_plz:
+                                                          noValue: true
+                                                        zweiter_kontakt:
+                                                          noValue: true
+                                                      exitReason:
+                                                        noValue: true
+                                                outputs:
+                                                  success:
+                                                    actions:
+                                                      - loopNext:
+                                                          name: Next Loop
+                                  - disconnect:
+                                      name: Disconnect
+                                enabled: true
+                            - intent:
+                                name: Registrierung
+                                enabled: true
+                            - intent:
+                                name: Marktverfügbarkeit
+                                actions:
+                                  - askForBoolean:
+                                      name: Ask for Yes / No
+                                      question:
+                                        exp: "MakeCommunication(\n  \"Dieser Service ist noch nicht verfügbar. Soll ich Sie stattdessen mit einem Markt in ihrer Nähe verbinden?\")"
+                                      noInput:
+                                        exp: "MakeCommunication(\n  \"Sagen Sie \\\"ja\\\", wenn Sie fortfahren möchten, oder \\\"nein\\\", wenn nicht.\")"
+                                      noMatch:
+                                        exp: "MakeCommunication(\n  \"Sagen Sie \\\"Ja\\\" oder \\\"Nein\\\". Möchten Sie fortfahren?\")"
+                                      voiceEndOfInputTimeout:
+                                        noValue: true
+                                      outputs:
+                                        "no":
+                                          actions:
+                                            - communicate:
+                                                name: Communicate
+                                                communication:
+                                                  exp: "MakeCommunication(\n  \"Auf Wiederhören.\")"
+                                            - disconnect:
+                                                name: Disconnect
+                                        maxNoInputs:
+                                          enabled: false
+                                        maxNoMatches:
+                                          enabled: false
+                                enabled: false
+                            - intent:
+                                name: Marktstandort
+                                actions:
+                                  - updateData:
+                                      name: Update Data
+                                      statements:
+                                        - boolean:
+                                            variable: Flow.AdresseNennen
+                                            value:
+                                              lit: true
+                                  - callAgenticVirtualAgent:
+                                      name: Agentenbasierten virtuellen Agenten anrufen
+                                      agenticVirtualAgent:
+                                        Großhandel Markt Finder & Registrierung:
+                                          ver_latestPublished:
+                                            inputs:
+                                              worktypeid_kartenbestellung:
+                                                noValue: true
+                                              kunden_anliegen:
+                                                exp: Session.ActiveIntent
+                                              kunde_plz:
+                                                noValue: true
+                                              zweiter_kontakt:
+                                                noValue: true
+                                            exitReason:
+                                              noValue: true
+                                      outputs:
+                                        success:
+                                          actions:
+                                            - disconnect:
+                                                name: Trennen
+                                        failure:
+                                          actions:
+                                            - communicate:
+                                                name: Kommunizieren
+                                                communication:
+                                                  exp: "If(AreEqual(true, Session.Language, \"de-de\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"Mir ist ein Fehler passiert.\"), \n    MakeCommunication(\n      \"Mir ist ein Fehler passiert. \")), \n  If(AreEqual(true, Session.Language, \"en-us\"), \n    ToMultimodalCommunication(\n      MakeCommunication(\n        \"An error occurred. \"), \n      MakeCommunication(\n        \"Mir ist ein Fehler passiert. \")), \n    MakeCommunication(\n      \"Mir ist ein Fehler passiert. \")))"
+                                            - askForBoolean:
+                                                name: Ja/Nein-Frage stellen
+                                                question:
+                                                  exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  MakeCommunication(\n    \"Do you still want me to find you a market?\"), \n  MakeCommunication(\n    \"Soll ich dich weiterhin mit deinem Markt verbinden?\"))"
+                                                noInput:
+                                                  exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  MakeCommunication(\n    \"Say \\\"yes\\\" if you want to proceed or \\\"no\\\" if you don't.\"), \n  MakeCommunication(\n    \"Sagen Sie \\\"ja\\\", wenn Sie fortfahren möchten, oder \\\"nein\\\", wenn nicht.\"))"
+                                                noMatch:
+                                                  exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  MakeCommunication(\n    \"Please say \\\"yes\\\" or \\\"no\\\".  Do you want to proceed?\"), \n  MakeCommunication(\n    \"Sagen Sie \\\"Ja\\\" oder \\\"Nein\\\". Möchten Sie fortfahren?\"))"
+                                                voiceEndOfInputTimeout:
+                                                  lit:
+                                                    seconds: 3
+                                                outputs:
+                                                  "yes":
+                                                    actions:
+                                                      - loopExit:
+                                                          name: Schleife beenden
+                                                  maxNoInputs:
+                                                    enabled: false
+                                                  maxNoMatches:
+                                                    enabled: false
+                                        timeout:
+                                          actions:
+                                            - communicate:
+                                                name: Kommunizieren
+                                                communication:
+                                                  exp: "If(AreEqual(true, Session.Language, \"de-de\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"Mir ist ein Fehler passiert.\"), \n    MakeCommunication(\n      \"Mir ist ein Fehler passiert. \")), \n  If(AreEqual(true, Session.Language, \"en-us\"), \n    ToMultimodalCommunication(\n      MakeCommunication(\n        \"An error occurred. \"), \n      MakeCommunication(\n        \"Mir ist ein Fehler passiert. \")), \n    MakeCommunication(\n      \"Mir ist ein Fehler passiert. \")))"
+                                            - askForBoolean:
+                                                name: Ja/Nein-Frage stellen
+                                                question:
+                                                  exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  MakeCommunication(\n    \"Do you still want me to find you a market?\"), \n  MakeCommunication(\n    \"Soll ich dich weiterhin mit deinem Markt verbinden?\"))"
+                                                noInput:
+                                                  exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  MakeCommunication(\n    \"Say \\\"yes\\\" if you want to proceed or \\\"no\\\" if you don't.\"), \n  MakeCommunication(\n    \"Sagen Sie \\\"ja\\\", wenn Sie fortfahren möchten, oder \\\"nein\\\", wenn nicht.\"))"
+                                                noMatch:
+                                                  exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  MakeCommunication(\n    \"Please say \\\"yes\\\" or \\\"no\\\".  Do you want to proceed?\"), \n  MakeCommunication(\n    \"Sagen Sie \\\"Ja\\\" oder \\\"Nein\\\". Möchten Sie fortfahren?\"))"
+                                                voiceEndOfInputTimeout:
+                                                  lit:
+                                                    seconds: 3
+                                                outputs:
+                                                  "yes":
+                                                    actions:
+                                                      - loopExit:
+                                                          name: Schleife beenden
+                                                  maxNoInputs:
+                                                    enabled: false
+                                                  maxNoMatches:
+                                                    enabled: false
+                                enabled: true
+                          noIntent:
+                            enabled: true
+                            actions:
+                              - communicate:
+                                  name: Communicate
+                                  communication:
+                                    exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"I did not understand your intent. Let me transfer you to our representative\"), \n    MakeCommunication(\n      \"Ich habe kein Anliegen verstanden. Ich verbinde Sie zu unserem Service-Center\")), \n  MakeCommunication(\n    \"Ich habe kein Anliegen verstanden. Ich verbinde Sie zu unserem Service-Center\"))"
+                              - exitBotFlow:
+                                  name: Exit Bot Flow
+                          knowledge:
+                            enabled: true
+                            actions:
+                              - disconnect:
+                                  name: Trennen
+                          maxNoInputs:
+                            enabled: true
+                            actions:
+                              - communicate:
+                                  name: Communicate
+                                  communication:
+                                    exp: "If(AreEqual(true, Session.Language, \"en-us\"), \n  ToMultimodalCommunication(\n    MakeCommunication(\n      \"I did not understand your intent. Let me transfer you to our Service-Center.\"), \n    MakeCommunication(\n      \"Ich habe nichts verstanden. Ich verbinde Sie jetzt mit unserem Service-Center\")), \n  MakeCommunication(\n    \"Ich habe nichts verstanden. Ich verbinde Sie jetzt mit unserem Service-Center\"))"
+                              - exitBotFlow:
+                                  name: Exit Bot Flow
+          - loop:
+              name: Loop
+              currentIndex:
+                var: Flow.y
+              loopCount:
+                lit: 2
+              outputs:
+                loop:
+                  actions:
+                    - decision:
+                        name: Markt direkt erkannt?
+                        condition:
+                          exp: "!IsNotSetOrEmpty(Slot.Märkte)"
+                        outputs:
+                          "yes":
+                            actions:
+                              - communicate:
+                                  name: Communicate
+                                  communication:
+                                    exp: "MakeCommunication(\n  \"Ich verbinde Sie mit\", \n  ToCommunication(ResolveSlot(Slot.Märkte)))"
+                              - disconnect:
+                                  name: Disconnect
+                          "no":
+                            actions:
+                              - decision:
+                                  name: PLZ erkannt?
+                                  condition:
+                                    exp: "!IsNotSetOrEmpty(Slot.erkanntePLZ)"
+                                  outputs:
+                                    "yes":
+                                      actions:
+                                        - loop:
+                                            name: Loop
+                                            currentIndex:
+                                              var: Flow.i
+                                            loopCount:
+                                              lit: 2
+                                            outputs:
+                                              loop:
+                                                actions:
+                                                  - callTask:
+                                                      name: Call Task
+                                                      targetTaskRef: "/botFlow/tasks/task[PLZ Zuordnung_53]"
+                                                      outputs:
+                                                        default:
+                                                          actions:
+                                                            - disconnect:
+                                                                name: Disconnect
+                                                        paths:
+                                                          - path:
+                                                              name: Fehler
+                                                              actions:
+                                                                - askForSlot:
+                                                                    name: Ask for Slot
+                                                                    slot:
+                                                                      name: Märkte
+                                                                    question:
+                                                                      exp: "MakeCommunication(\n  \"Mit welchem Markt soll ich Sie verbinden?\")"
+                                                                    customValidation:
+                                                                      noValue: true
+                                                                    confirmationMode:
+                                                                      lit: never
+                                                                    noInput:
+                                                                      exp: "MakeCommunication(\n  \"Bitte nennen Sie mir den Namen oder Stadtteil ihres Marktes\")"
+                                                                    noMatch:
+                                                                      exp: "MakeCommunication(\n  \"Ich habe leider keinen Markt verstanden.\", \n  \"Bitte versuchen Sie es nocheinmal.\")"
+                                                                    voiceEndOfInputTimeout:
+                                                                      lit:
+                                                                        seconds: 2
+                                                                    outputs:
+                                                                      default:
+                                                                        actions:
+                                                                          - loopExit:
+                                                                              name: Exit Loop
+                                                                      maxNoInputs:
+                                                                        enabled: false
+                                                                      maxNoMatches:
+                                                                        enabled: true
+                                                                        actions:
+                                                                          - askForSlot:
+                                                                              name: Ask for Slot
+                                                                              slot:
+                                                                                name: erkanntePLZ
+                                                                              question:
+                                                                                exp: "MakeCommunication(\n  \"Wenn Sie mir ihre Postleitzahl nennen, kann ich Sie mit einem Markt in der Nähe verbinden\")"
+                                                                              customValidation:
+                                                                                noValue: true
+                                                                              confirmationMode:
+                                                                                lit: never
+                                                                              noInput:
+                                                                                exp: "MakeCommunication(\n  \"Ich habe leider keine PLZ gehört.\")"
+                                                                              noMatch:
+                                                                                exp: "MakeCommunication(\n  \"Ich habe leider die genannte Postleitzahl nicht gefunden.\")"
+                                                                              voiceEndOfInputTimeout:
+                                                                                lit:
+                                                                                  seconds: 4
+                                                                              outputs:
+                                                                                maxNoInputs:
+                                                                                  enabled: false
+                                                                                maxNoMatches:
+                                                                                  enabled: false
+                                                          - path:
+                                                              name: Anderer Markt
+                                                              actions:
+                                                                - clearSlot:
+                                                                    name: Clear Slot
+                                                                    slots:
+                                                                      - slot:
+                                                                          name: erkanntePLZ
+                                                                      - slot:
+                                                                          name: Märkte
+                                                                - askForSlot:
+                                                                    name: Ask for Slot
+                                                                    slot:
+                                                                      name: Märkte
+                                                                    question:
+                                                                      exp: "MakeCommunication(\n  \"Mit welchem Markt soll ich Sie verbinden?\")"
+                                                                    customValidation:
+                                                                      noValue: true
+                                                                    confirmationMode:
+                                                                      lit: never
+                                                                    noInput:
+                                                                      exp: "MakeCommunication(\n  \"Bitte nennen Sie mir den Namen oder Stadtteil ihres Marktes\")"
+                                                                    customizeNoMatch:
+                                                                      noMatchReprompts:
+                                                                        noValue: true
+                                                                    voiceEndOfInputTimeout:
+                                                                      lit:
+                                                                        seconds: 1
+                                                                    outputs:
+                                                                      default:
+                                                                        actions:
+                                                                          - loopExit:
+                                                                              name: Exit Loop
+                                                                      maxNoInputs:
+                                                                        enabled: false
+                                                                      maxNoMatches:
+                                                                        enabled: true
+                                                                        actions:
+                                                                          - askForSlot:
+                                                                              name: Ask for Slot
+                                                                              slot:
+                                                                                name: erkanntePLZ
+                                                                              question:
+                                                                                exp: "MakeCommunication(\n  \"Wenn Sie mir ihre Postleitzahl nennen, kann ich Sie mit einem Markt in der Nähe verbinden\")"
+                                                                              customValidation:
+                                                                                noValue: true
+                                                                              confirmationMode:
+                                                                                lit: never
+                                                                              noInput:
+                                                                                exp: "MakeCommunication(\n  \"Ich habe leider keine PLZ gehört.\")"
+                                                                              noMatch:
+                                                                                exp: "MakeCommunication(\n  \"Ich habe leider die genannte Postleitzahl nicht gefunden.\")"
+                                                                              voiceEndOfInputTimeout:
+                                                                                lit:
+                                                                                  seconds: 4
+                                                                              outputs:
+                                                                                maxNoInputs:
+                                                                                  enabled: false
+                                                                                maxNoMatches:
+                                                                                  enabled: false
+                                    "no":
+                                      actions:
+                                        - askForSlot:
+                                            name: Ask for Slot
+                                            slot:
+                                              name: Märkte
+                                            question:
+                                              exp: "MakeCommunication(\n  \"Mit welchem markt soll ich Sie verbinden?\")"
+                                            customValidation:
+                                              noValue: true
+                                            confirmationMode:
+                                              lit: never
+                                            noInput:
+                                              exp: "MakeCommunication(\n  \"Bitte nennen Sie Ihren Markt\")"
+                                            noMatch:
+                                              exp: "MakeCommunication(\n  \"Ich habe leider keinen Markt verstanden.\", \n  \"Bitte versuchen Sie es nocheinmal.\")"
+                                            voiceEndOfInputTimeout:
+                                              lit:
+                                                seconds: 2
+                                            outputs:
+                                              default:
+                                                actions:
+                                                  - loopNext:
+                                                      name: Next Loop
+                                              maxNoInputs:
+                                                enabled: false
+                                              maxNoMatches:
+                                                enabled: true
+                                                actions:
+                                                  - askForSlot:
+                                                      name: Ask for Slot
+                                                      slot:
+                                                        name: erkanntePLZ
+                                                      question:
+                                                        exp: "MakeCommunication(\n  \"Wenn Sie mir ihre P.L.Z nennen, kann ich Sie mit einem Markt in der Nähe verbinden\")"
+                                                      customValidation:
+                                                        noValue: true
+                                                      confirmationMode:
+                                                        lit: never
+                                                      noInput:
+                                                        exp: "MakeCommunication(\n  \"Ich habe leider keine Postleitzahl gehört.\")"
+                                                      noMatch:
+                                                        exp: "MakeCommunication(\n  \"Ich habe leider die genannte Postleitzahl nicht gefunden.\")"
+                                                      voiceEndOfInputTimeout:
+                                                        lit:
+                                                          seconds: 4
+                                                      outputs:
+                                                        maxNoInputs:
+                                                          enabled: false
+                                                        maxNoMatches:
+                                                          enabled: false
+          - communicate:
+              name: DEBUG Logging / Testing
+              communication:
+                exp: "MakeCommunication(\n  \"Ich habe keinen Markt verstanden. Versuchen wir es nochmal von Anfang an.\")"
+          - exitBotFlow:
+              name: Bot-Flow beenden
+  settingsNaturalLanguageUnderstanding:
+    nluDomainVersion:
+      intents:
+        - additionalLanguages:
+            en-us:
+              utterances: []
+          utterances:
+            - segments:
+                - text: Ich warte auf
+              id: 3247c2d4-4e6a-4685-b183-70ba262da80c
+              source: User
+            - segments:
+                - text: Wann kommt mein
+              id: 05e02076-0553-469b-a3e6-7ac0cc92faea
+              source: User
+            - segments:
+                - text: Ich warte auf meine Lieferung
+              id: bc747c68-ece5-4d9d-9c27-111f147f5529
+              source: User
+            - segments:
+                - text: Mein Paket ist noch nicht da
+              id: 694232b2-f45c-4712-b670-14a210191158
+              source: User
+            - segments:
+                - text: Wann kommt mein Paket
+              id: 5c4114af-dd5e-4bbd-9dad-ae124916c1dd
+              source: User
+            - segments:
+                - text: Lieferung nachverfolgen
+              id: 34a72c4d-27ee-4cfc-a0bc-2f3c8941f788
+              source: User
+            - segments:
+                - text: Frage zur Lieferung
+              id: 4edfa711-6e09-43d7-b70e-a2db165ac1db
+              source: User
+          entityNameReferences: []
+          id: b094f5d8-5a33-479b-97ff-4cf8222aa29d
+          name: Lieferung
+        - additionalLanguages:
+            en-us:
+              id: 0671908e-7f0a-433f-b578-818391e4d361
+              utterances:
+                - segments:
+                    - text: Can you connect me to my trading market?
+                  id: c7303bb0-1316-4452-ae52-866192e8b01b
+                - segments:
+                    - text: I need to speak with a staff member.
+                  id: a3c42266-9987-424c-9074-8307f09d43e8
+                  source: Generated
+                - segments:
+                    - text: Can I talk to the market manager?
+                  id: 6994a362-10c9-4f50-a437-5e858a36040f
+                  source: Generated
+                - segments:
+                    - text: How do I reach my local market?
+                  id: 27fff06e-2ad4-4c27-b7f0-1eb3a9b8c0dd
+                  source: Generated
+                - segments:
+                    - text: I'd like to contact the market office.
+                  id: 089ad846-c9c9-4826-aa18-94982b6046bc
+                  source: Generated
+                - segments:
+                    - text: Connect me with a team member please.
+                  id: 63dda6dc-c761-4d95-b708-15f74f094a07
+                  source: Generated
+                - segments:
+                    - text: I want to speak with someone from management.
+                  id: 7ff55a41-8901-410f-9020-38bfe23509e1
+                  source: Generated
+                - segments:
+                    - text: Can you put me through to the market?
+                  id: edf28944-9079-4747-b5cc-e8ddbb76401f
+                  source: Generated
+                - segments:
+                    - text: I need to get in touch with the local branch.
+                  id: 130c7962-93d9-4f3d-8704-fc2a895de591
+                  source: Generated
+                - segments:
+                    - text: How can I reach a representative?
+                  id: bd91250f-f1e7-4d66-ade1-1b66fb5d9c25
+                  source: Generated
+                - segments:
+                    - text: I'd like to contact the market directly.
+                  id: 64c62262-ca67-4218-8482-b5e8a1413b42
+                  source: Generated
+                - segments:
+                    - text: Can I speak to an employee?
+                  id: 2848ebff-c44e-4679-9459-e0357d9acdc1
+                  source: Generated
+                - segments:
+                    - text: Connect me with the market office.
+                  id: 16dad4ac-29f9-46b6-966e-457f8b31ed42
+                  source: Generated
+                - segments:
+                    - text: I want to reach out to the local team.
+                  id: 0245cc53-b476-4eb5-a510-a1a3e9531e63
+                  source: Generated
+                - segments:
+                    - text: How do I contact the manager?
+                  id: a2c2e68c-ce59-4042-af51-91e6469de524
+                  source: Generated
+                - segments:
+                    - text: I need assistance from staff.
+                  id: fa24dfde-98b0-4d45-8b3f-c7109bc27e51
+                  source: Generated
+                - segments:
+                    - text: Can you help me reach the market?
+                  id: 1a97b561-9412-476a-8ac7-b584d1457f34
+                  source: Generated
+                - segments:
+                    - text: I'd like to talk to a manager.
+                  id: 86b2da6a-e898-4c20-82b6-f97c9593906e
+                  source: Generated
+                - segments:
+                    - text: Connect me with the local office.
+                  id: b4d95996-06b1-4176-be71-d18f5b7ffd7e
+                  source: Generated
+                - segments:
+                    - text: I want to speak with management.
+                  id: 10e7693c-e140-4147-a387-20a8695d2ed5
+                  source: Generated
+                - segments:
+                    - text: Can I get in contact with someone?
+                  id: 4ef00985-d3f1-43fc-a1c2-d87f692787f6
+                  source: Generated
+          utterances:
+            - segments:
+                - text: "Ich wohne in "
+                - text: "12309"
+                  entity:
+                    name: erkanntePLZ
+                - text: " und möchte meinem Markt sprechen"
+              id: 38d9dc59-aeff-41dc-9c83-d3d67b839396
+              source: User
+            - segments:
+                - text: "Ich habe beim Handelsmarkt "
+                - text: Marienfelde
+                  entity:
+                    name: Märkte
+                - text: " etwas gekauft und habe eine Frage dazu"
+              id: 7d8b6c00-e47d-40e5-bac9-59046b4a903a
+              source: User
+            - segments:
+                - text: contact the trading market
+              id: e3726f67-c605-4e2f-bea9-ac54597bd5ec
+              source: User
+            - segments:
+                - text: Transfer me to a market
+              id: 919afb60-85f8-4f7c-9409-2f2b9a203d72
+              source: User
+            - segments:
+                - text: Can I call my market?
+              id: 2abfe38b-777f-4760-822a-be2a134d04dd
+              source: User
+            - segments:
+                - text: Connect me to a market
+              id: 9684c840-f920-481a-afc4-78a8e10dbed6
+              source: User
+            - segments:
+                - text: "I live in "
+                - text: Spandau
+                  entity:
+                    name: Märkte
+                - text: " and want to talk to a represantative"
+              id: a0879c23-7585-4b28-872e-460d6e27ffb9
+              source: User
+            - segments:
+                - text: "Can you connect me to "
+                - text: Spandau
+                  entity:
+                    name: Märkte
+                - text: "?"
+              id: f8982114-a52f-41c2-a886-4e3c0274b947
+              source: User
+            - segments:
+                - text: "I live in "
+                - text: "12555"
+                  entity:
+                    name: erkanntePLZ
+                - text: " and want to talk to my market"
+              id: 094ab8ae-1213-46a0-b218-1aeb6c7d039a
+              source: User
+            - segments:
+                - text: Can you forward me to my market?
+              id: d60249de-c08b-4997-8167-45aad4b9053a
+              source: User
+            - segments:
+                - text: Möchte mit einem Mitarbeiter sprechen
+              id: 6bdeb034-d761-4c77-94b8-e46153596614
+              source: User
+            - segments:
+                - text: Kannst du mich weiterleiten?
+              id: 5667c772-75f7-4fad-8d8f-262b700b3589
+              source: User
+            - segments:
+                - text: Kann ich beim Markt anrufen?
+              id: cbb5f774-b7ae-49bb-8b0f-4a9bee3ca0b4
+              source: User
+            - segments:
+                - text: Ich habe eine Frage und will mit der Marktleitung sprechen
+              id: eede2680-73f6-4466-8b86-d9bb513af867
+              source: User
+            - segments:
+                - text: Ich möchte meinen Markt kontaktieren
+              id: bae1cefc-59df-489d-ac6f-e3f1defb9d37
+              source: User
+          entityNameReferences:
+            - Märkte
+            - erkanntePLZ
+          id: 0671908e-7f0a-433f-b578-818391e4d361
+          name: Markt kontaktieren
+          description: Der Nutzer möchte mit einem Mitarbeiter oder der Marktleitung sprechen oder seinen lokalen Markt kontaktieren.
+        - additionalLanguages:
+            en-us:
+              id: 9bb0a208-ecc0-4d72-82f8-124477235137
+              utterances:
+                - segments:
+                    - text: Where is the nearest store located?
+                  id: 114cc031-9124-406d-807d-a61787837f01
+                  source: Generated
+                - segments:
+                    - text: Can you find me a market close by?
+                  id: 102dc503-2b4a-4f1e-82f0-cb59f5be5cc7
+                  source: Generated
+                - segments:
+                    - text: What's the address of the closest branch?
+                  id: 69fe8b9c-3c7c-4931-aa7b-e1d80452a226
+                  source: Generated
+                - segments:
+                    - text: How do I get to the nearest location?
+                  id: 0a1377e0-d7e7-464e-ab4d-c85cd8444a12
+                  source: Generated
+                - segments:
+                    - text: Where can I find a store near me?
+                  id: f94ba319-52b2-47b3-af82-97dce5c54a10
+                  source: Generated
+                - segments:
+                    - text: What stores are open in my area?
+                  id: 5a1f7db5-0a64-428c-8431-a1b4240a868b
+                  source: Generated
+                - segments:
+                    - text: Is there a market nearby?
+                  id: 733ef7d6-781b-4233-bcd3-b0adc7c14009
+                  source: Generated
+                - segments:
+                    - text: Can you show me the closest branch?
+                  id: ff2c817d-2130-464c-be20-dfa7dd67e2e0
+                  source: Generated
+                - segments:
+                    - text: Where's the nearest outlet?
+                  id: d4b336f9-4d5c-438f-8443-93febf784f12
+                  source: Generated
+                - segments:
+                    - text: What's the location of the closest center?
+                  id: 6a3225c6-3c45-4720-8798-81821cd47532
+                  source: Generated
+                - segments:
+                    - text: How far is the nearest store from here?
+                  id: a00e9f77-493e-4487-85ce-84649b14498d
+                  source: Generated
+                - segments:
+                    - text: Can you locate a market for me?
+                  id: b0da519e-0389-43d2-8fe1-c4e384fd7710
+                  source: Generated
+                - segments:
+                    - text: Where do you have locations near me?
+                  id: 2a6fe715-f058-45ba-982e-0c785134e7fe
+                  source: Generated
+                - segments:
+                    - text: What stores do you have in my neighborhood?
+                  id: a563e6e1-d9b7-4077-90c7-979c97d404b8
+                  source: Generated
+                - segments:
+                    - text: Is there a branch close to my address?
+                  id: 2aee69ef-3d92-4f94-8c36-c7899b62d341
+                  source: Generated
+                - segments:
+                    - text: How can I find the nearest market?
+                  id: a249319d-90c1-4f24-9dbb-a095e2e42b6c
+                  source: Generated
+                - segments:
+                    - text: Where are your stores located nearby?
+                  id: 76e9785e-0a65-4e0e-a30b-5da3dc0c9be0
+                  source: Generated
+                - segments:
+                    - text: Can you help me find a local store?
+                  id: ee6613be-589b-46f9-b266-06c73b1e37b6
+                  source: Generated
+                - segments:
+                    - text: What's the closest location you have?
+                  id: 08e57803-d829-41bf-a35b-e4f1b4279ce0
+                  source: Generated
+                - segments:
+                    - text: Tell me where the nearest store is.
+                  id: e6c8e30b-570c-4c67-ad1a-5f67b5567390
+                  source: Generated
+          utterances:
+            - segments:
+                - text: An welcher Adresse ist der nächste Handelsmarkt?
+              id: 44645925-09cd-4622-b3f5-bb0b042a2161
+              source: User
+            - segments:
+                - text: Wie komme ich zu meinem Handelsmarkt
+              id: ff6743f6-fabb-4278-8fd7-827acd6e0c60
+              source: User
+            - segments:
+                - text: Kannst du mir sagen wo der nächste Handelsmarkt ist?
+              id: 4ba3d4ad-19e3-4130-8e6a-7bd754aba798
+              source: User
+            - segments:
+                - text: Weißt du wo ich den nächsten Testhandel finden kann?
+              id: 63d87b68-70ef-4396-a677-cad55e592440
+              source: User
+            - segments:
+                - text: Wo ist die nächste Filiale?
+              id: fefebfdf-8ebb-431c-91f7-d01eca2c4493
+              source: User
+            - segments:
+                - text: Suche einen Markt in der Nähe
+              id: fd8c6750-1595-402d-887f-0be317897ff6
+              source: User
+            - segments:
+                - text: Welche Straße ?
+              id: 7e6cab43-a634-4903-b6c8-6f0688efdb35
+              source: User
+            - segments:
+                - text: Wo finde ich den nächsten Markt?
+              id: c1375cd1-2e04-418d-9567-b22273d97e73
+              source: User
+            - segments:
+                - text: Wo befindet sich
+              id: dc2bc13f-cdad-45a7-870e-74a42f7de158
+              source: User
+          entityNameReferences: []
+          id: 9bb0a208-ecc0-4d72-82f8-124477235137
+          name: Marktstandort
+          description: Der Nutzer möchte den Standort einer nahegelegenen Filiale oder eines Markts erfahren.
+        - additionalLanguages:
+            en-us:
+              utterances: []
+          utterances:
+            - segments:
+                - text: Marktverfügbarkeit
+              id: b4b03e87-9ef6-49a2-bfeb-aea940e55974
+              source: User
+            - segments:
+                - text: Wie lange noch offen
+              id: 47d3640b-6e2c-40f5-943b-730f3b465044
+              source: User
+            - segments:
+                - text: Wie viel Uhr öffnet
+              id: 0c7d3be0-b851-4eff-9e20-ffe1646fbbf3
+              source: User
+            - segments:
+                - text: Wann schließt
+              id: 80a49b4d-84a0-4ec8-b1d7-d3b45145a8cc
+              source: User
+            - segments:
+                - text: Kann ich noch vorbeikommen
+              id: 9f722a36-34d0-4126-8b74-a4cc26e1756e
+              source: User
+            - segments:
+                - text: Hat noch geöffnet
+              id: 4fd747e1-488c-4595-8b22-1f2164322a0c
+              source: User
+            - segments:
+                - text: Hat schon geschlossen?
+              id: c8eec482-3ef8-4c34-84b9-7c08227e5758
+              source: User
+            - segments:
+                - text: Wann geöffnet
+              id: 7833068e-ee0d-45e9-b94f-930168f50cbe
+              source: User
+            - segments:
+                - text: "Öffnungszeiten"
+              id: 1640ab0e-70a7-4c71-ae8f-4f2ca2fbe845
+              source: User
+          entityNameReferences: []
+          id: 90482a43-939b-4354-b1d4-b3f22fa042c2
+          name: Marktverfügbarkeit
+        - additionalLanguages:
+            en-us:
+              id: 0687ee87-a8a5-4831-aa46-d2d59cc297e1
+              utterances:
+                - segments:
+                    - text: "I have a question around your "
+                    - text: cheese
+                      entity:
+                        name: Produkttyp
+                    - text: "-selection"
+                  id: feeef41f-c726-49fc-95d2-eea273f8692f
+                  source: User
+                - segments:
+                    - text: "Is the "
+                    - text: Parmeggiano Reggiano
+                      entity:
+                        name: Produktname
+                    - text: " lactose-free?"
+                  id: 2187991e-08ad-49e9-a8c8-8d0383fb823d
+                  source: User
+                - segments:
+                    - text: What ingredients are in this product?
+                  id: 0801e413-8b16-40ac-af2a-e2907cd00da4
+                  source: Generated
+                - segments:
+                    - text: Does this contain any allergens I should know about?
+                  id: 69d89453-f021-461f-b7b4-2a3a3504d27f
+                  source: Generated
+                - segments:
+                    - text: Is this item vegan-friendly?
+                  id: a0c6df84-a47e-4e87-8dbf-c8babd8916e3
+                  source: Generated
+                - segments:
+                    - text: Can you tell me if this is lactose-free?
+                  id: 0851198d-50d2-406c-89d0-43578266f668
+                  source: Generated
+                - segments:
+                    - text: What are the nutritional facts for this product?
+                  id: 817e246e-b6f1-4da2-b5f8-31207a99611e
+                  source: Generated
+                - segments:
+                    - text: How do I use this product?
+                  id: f0dbb899-b9bf-4a48-8234-6a9dc8768562
+                  source: Generated
+                - segments:
+                    - text: Is this gluten-free?
+                  id: 24a6fcd0-1988-46e1-9252-45b4eaeaf642
+                  source: Generated
+                - segments:
+                    - text: What's the shelf life of this item?
+                  id: b6f01afd-cb48-4385-b1d9-c1ab3f6c8c48
+                  source: Generated
+                - segments:
+                    - text: Does this contain nuts?
+                  id: 790f35bc-6e1d-4ac1-ae1b-1b1c9a504e0f
+                  source: Generated
+                - segments:
+                    - text: Is this product organic?
+                  id: 14156f03-6032-4b0d-acfb-63b2b8715ea4
+                  source: Generated
+                - segments:
+                    - text: Can you list all the allergens in this?
+                  id: 555bb263-92ff-4730-ad57-405788bb484c
+                  source: Generated
+                - segments:
+                    - text: How much sugar does this have?
+                  id: f068e2d8-eb0a-46c5-8692-674049d38abd
+                  source: Generated
+                - segments:
+                    - text: Is this suitable for vegetarians?
+                  id: cabe441a-f804-4382-ba95-35c2dfdfee09
+                  source: Generated
+                - segments:
+                    - text: What additives are in this product?
+                  id: fc3deeb0-b27d-4aba-8b48-fa56cf53286f
+                  source: Generated
+                - segments:
+                    - text: Does this contain dairy?
+                  id: 18c3acca-2227-4be0-834b-acd2795dfc3c
+                  source: Generated
+                - segments:
+                    - text: Is this product non-GMO?
+                  id: b5a05ce1-6820-4ef6-a2a7-7614d48fd01e
+                  source: Generated
+                - segments:
+                    - text: What's the recommended serving size?
+                  id: 550b2685-7749-4468-ade4-5db15eb3152d
+                  source: Generated
+                - segments:
+                    - text: Does this have artificial preservatives?
+                  id: 73801af4-6701-43de-bf07-9a7e3a367508
+                  source: Generated
+                - segments:
+                    - text: Is this kosher certified?
+                  id: 4182e9c7-23fb-4d79-bc1f-9c6eefdd5d2b
+                  source: Generated
+                - segments:
+                    - text: What's the country of origin for this item?
+                  id: 615b68a2-781e-45ec-ab7a-e32431380844
+                  source: Generated
+          utterances:
+            - segments:
+                - text: "Ich habe ein Produkt im Markt "
+                - text: Marienfelde
+                  entity:
+                    name: Märkte
+                - text: " gekauft und habe eine Frage dazu"
+              id: 3f10777c-9c82-468f-bc18-c2a1e3f6dace
+              source: User
+            - segments:
+                - text: "Ich habe eine Frage zum "
+                - text: Käse
+                  entity:
+                    name: Produkttyp
+              id: 12c77cb9-ae60-420f-bf73-2b380b2153b6
+              source: User
+            - segments:
+                - text: "Ich habe eine Frage zu "
+                - text: Parmeggiano Reggiano
+                  entity:
+                    name: Produktname
+              id: 07585154-c7f1-42bd-b5e0-1dd438686673
+              source: User
+            - segments:
+                - text: Allergie
+              id: 6522000f-8ad2-452e-b005-7f685b4b112e
+              source: User
+            - segments:
+                - text: Allergisch
+              id: 26c74428-8ace-4024-a16f-7237a6f39c51
+              source: User
+            - segments:
+                - text: Vegan?
+              id: c7715942-7794-448b-89ab-c991faba9d64
+              source: User
+            - segments:
+                - text: Vegetarisch?
+              id: 13fa753d-7e06-41b3-a86c-08d1ba48399c
+              source: User
+            - segments:
+                - text: Ist laktosefrei?
+              id: f0d2e487-8fed-4d5b-a005-dc51bd9db7d7
+              source: User
+            - segments:
+                - text: Was kann ich
+              id: 58f43674-ab57-42e3-9965-2ea31fbb520b
+              source: User
+            - segments:
+                - text: Wie benutze ich
+              id: 512191c6-b8f1-499e-b1ae-6eb4ebc892ab
+              source: User
+            - segments:
+                - text: Ich habe eine Frage zu einem Produkt
+              id: 6d5bbf00-d297-463e-9fdb-d0ab005c9172
+              source: User
+          entityNameReferences:
+            - Märkte
+            - Produktname
+            - Produkttyp
+          id: 0687ee87-a8a5-4831-aa46-d2d59cc297e1
+          name: Produktinformation
+          description: Der Nutzer hat eine Frage zu einem Produkt, beispielsweise zu Inhaltsstoffen, Allergenen, Verwendung oder Eigenschaften wie Veganität oder Laktosefreiheit.
+        - additionalLanguages:
+            en-us:
+              utterances: []
+          utterances:
+            - segments:
+                - text: Informationen anpassen bei meinem Handelsmarkt Profil
+              id: 67a1f2e3-3546-4214-8ba3-443ea526fbfb
+              source: User
+            - segments:
+                - text: Frage zur Testhandelskarte
+              id: 5bdf1873-ad8b-46f5-9fa4-eb531b5f5d55
+              source: User
+            - segments:
+                - text: Stammdaten
+              id: a28d7eaf-4f7f-4e7f-bfbf-c1e8de39e22d
+              source: User
+            - segments:
+                - text: Frage zu Kundenprofil
+              id: 50c3e8da-9d27-44cb-94b6-68ed7f4ca7fc
+              source: User
+            - segments:
+                - text: Passwort vergessen
+              id: c1e339b8-001a-4a47-af03-fb0cc6bf49b0
+              source: User
+            - segments:
+                - text: neue Adresse mitteilen
+              id: be25e509-a887-4147-835c-14c89526f8a0
+              source: User
+            - segments:
+                - text: umgezogen und neue Adresse angeben
+              id: 83c7aea0-b969-444c-b6b7-ea6ec2ba98cc
+              source: User
+            - segments:
+                - text: Adressänderung mitteilen
+              id: cfbcb937-5195-4622-9be9-04f89f2f7d7b
+              source: User
+            - segments:
+                - text: Möchte meine Adresse ändern
+              id: 95addcad-4e86-4689-ad82-e84bdb371ab9
+              source: User
+            - segments:
+                - text: Ich habe eine Frage zu meinem Profil
+              id: da003fe4-1ac0-410f-8943-d4de1dff851a
+              source: User
+          entityNameReferences: []
+          id: 05251bc3-92a1-453d-bf13-5198d3698db6
+          name: Profil
+        - additionalLanguages:
+            en-us:
+              utterances: []
+          utterances:
+            - segments:
+                - text: Neu beim Testhandel und möchte eine Karte haben
+              id: 461a55e5-00ea-40ae-b21c-89513ddd5bd1
+              source: User
+            - segments:
+                - text: neuer Kunde registrieren
+              id: dbe17e8e-fab1-46f7-b977-a845297ede6e
+              source: User
+            - segments:
+                - text: Kundenkonto beantragen
+              id: 4fe7dbe3-c374-4f58-a1f1-ca26320bd0ce
+              source: User
+            - segments:
+                - text: Registrierung
+              id: 39dfb92b-6480-41a5-b09f-b58627fc044b
+              source: User
+            - segments:
+                - text: Benutzer anlegen
+              id: bb2f183e-5309-4d77-8ba4-929e7646d079
+              source: User
+            - segments:
+                - text: neues Konto anlegen
+              id: b2d66e97-439e-435a-9dde-1ad0a9b3266a
+              source: User
+          entityNameReferences: []
+          id: eef7b3ef-35c2-4196-b6a3-ffcc561848f1
+          name: Registrierung
+      entities:
+        - name: erkanntePLZ
+          type: erkanntePLZ-RegEx
+        - name: Märkte
+          type: Märkte_Liste
+        - name: OrderNo
+          type: orderNoType
+        - name: Produktkategorie_Essen
+          type: Produktkategorie_Essen_Typ
+        - name: Produktname
+          type: ProduktnameType
+        - name: Produkttyp
+          type: Produkttyp_Type
+        - name: Telefon_Kundenservice
+          type: "builtin:number"
+      entityTypes:
+        - name: erkanntePLZ-RegEx
+          description: The description of the Entity Type "erkanntePLZ-RegEx"
+          mechanism:
+            type: Regex
+            restricted: true
+            items:
+              - value: "\\b[0-9](?:\\s*[0-9]){3}\\b"
+                synonyms: []
+              - value: "\\b[0-9](?:\\s*[0-9]){4}\\b"
+                synonyms: []
+              - value: "^\\s*[0-9](?:\\s*[0-9]){4}\\s*$"
+                synonyms: []
+              - value: "^\\s*[0-9]{5}\\s*$"
+                synonyms: []
+              - value: "^[0-9]{5}$"
+                synonyms: []
+              - value: "\\b[0-9]{5}\\b"
+                synonyms: []
+        - name: Märkte_Liste
+          description: The description of the Entity Type "Märkte_Liste"
+          mechanism:
+            type: List
+            restricted: true
+            items:
+              - value: Harburg
+                synonyms: []
+                additionalLanguages:
+                  en-us:
+                    synonyms: []
+              - value: Niendorf
+                synonyms: []
+                additionalLanguages:
+                  en-us:
+                    synonyms: []
+              - value: Altona
+                synonyms:
+                  - "20257"
+                  - "20357"
+                  - "20359"
+                  - "22525"
+                  - "22547"
+                  - "22549"
+                  - "22559"
+                additionalLanguages:
+                  en-us:
+                    synonyms: []
+              - value: Duisburg
+                synonyms: []
+                additionalLanguages:
+                  en-us:
+                    synonyms: []
+              - value: Neuss
+                synonyms: []
+                additionalLanguages:
+                  en-us:
+                    synonyms: []
+              - value: Sankt Augustin
+                synonyms: []
+                additionalLanguages:
+                  en-us:
+                    synonyms: []
+              - value: Leverkusen
+                synonyms: []
+                additionalLanguages:
+                  en-us:
+                    synonyms: []
+              - value: Köln
+                synonyms:
+                  - Grimberg
+                additionalLanguages:
+                  en-us:
+                    synonyms: []
+              - value: Dresden
+                synonyms:
+                  - "40235"
+                additionalLanguages:
+                  en-us:
+                    synonyms: []
+              - value: Leipzig
+                synonyms: []
+                additionalLanguages:
+                  en-us:
+                    synonyms: []
+              - value: Düsseldorf
+                synonyms: []
+                additionalLanguages:
+                  en-us:
+                    synonyms: []
+              - value: Berolina
+                synonyms:
+                  - Spandau
+                  - "13599"
+                additionalLanguages:
+                  en-us:
+                    synonyms: []
+              - value: Marienfelde
+                synonyms:
+                  - "12309"
+                  - "12277"
+                  - Mariendorf
+                additionalLanguages:
+                  en-us:
+                    synonyms: []
+              - value: Friedrichshain
+                synonyms:
+                  - "10243"
+                additionalLanguages:
+                  en-us:
+                    synonyms: []
+        - name: orderNoType
+          description: The description of the Entity Type "orderNoType"
+          mechanism:
+            type: Regex
+            restricted: true
+            items:
+              - value: "\\bHLCU\\d{7}\\b"
+                synonyms: []
+              - value: "\\d{7}\\b"
+                synonyms: []
+              - value: "\\d{7}"
+                synonyms: []
+        - name: Produktkategorie_Essen_Typ
+          description: The description of the Entity Type "Produktkategorie_Essen_Typ"
+          mechanism:
+            type: List
+            restricted: true
+            items:
+              - value: Fleisch
+                synonyms:
+                  - Ente
+                  - Huhn
+                  - Hähnchen
+                  - Hack
+                  - Hackfleisch
+                  - Rind
+                  - Schwein
+                  - Leber
+                additionalLanguages:
+                  en-us:
+                    synonyms: []
+              - value: Fisch
+                synonyms:
+                  - Zander
+                  - Backfisch
+                  - Lachs
+                  - Garnelen
+                additionalLanguages:
+                  en-us:
+                    synonyms: []
+        - name: ProduktnameType
+          description: The description of the Entity Type "ProduktnameType"
+          mechanism:
+            type: Regex
+            restricted: true
+            items:
+              - value: ".*"
+                synonyms: []
+        - name: Produkttyp_Type
+          description: The description of the Entity Type "Produkttyp_Type"
+          mechanism:
+            type: Regex
+            restricted: true
+            items:
+              - value: ".*"
+                synonyms: []
+        - name: test
+          description: The description of the Entity Type "test"
+          mechanism:
+            type: List
+            restricted: true
+            items:
+              - value: test
+                synonyms: []
+                additionalLanguages:
+                  en-us:
+                    synonyms: []
+      language: de-de
+      languageVersions:
+        en-us: afebc6cc-daa5-46c7-a868-338e72e8ee3d
+    mutedUtterances: []
