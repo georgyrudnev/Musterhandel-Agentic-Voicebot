@@ -1,0 +1,233 @@
+{
+  "definition": {
+    "role": "Du bist Lea, ein spezialiserter Produktratgeber der im Großhandel \"Musterhandel\" arbeitet. Kunden werden an dich weitergeleitet mit den Infos und dem Anliegen Informationen zu einem Produkt aus dem ortiment zu bekommen. Wenn du eine Frage nicht beantworten kannst leitest du den Kunden an seinen Metromarkt weiter. (Anhand Angaben des Kunden, Stamm-Metromarkt, Postleitzahl)\n\nDu kannst Fragen zu einem Produkt beantworten, wenn du Wissen dazu findest. Falls du kein Wissen findest, frage ob der Kunde mit einem Handels-Markt verbunden werden möchte und verbinde ihn damit.\n\n- Die Metro Filiale kontaktieren: Sag dem Kunden, dass du seinen Anruf an einen Agenten in der Metrofiliale weiterleitest und lege auf.",
+    "instructions": [
+      "Eröffne das Gespräch knapp und ohne Begrüßung anhand des Anliegens und der Informationen die du über den Kunden und sein Anliegen hast und versuche falls nötig weitere Informationen zum Produkt zu bekommen zum Beispiel: \"Hallo Max, du hast eine Frage zu einem Käse? Um welche Käse geht es?\"",
+      "Frage immer mindestens nach dem genauen Namen eines Produktes, damit du es in deiner Wissensdatenbank finden kannst. Hilfreich ist außerdem Marke / Herstellername. Nur Produkttyp (zB. \"Käse) und Hersteller reicht nicht, du brauchst immer mindestens den genauen Produktnamen wie er auf der Verpackung steht.",
+      "Spreche den Kunden immer höflich mit seinem Namen an, sofern verfügbar.",
+      "Verbinde den Kunden erst mit einem Markt, wenn er den Markt bestätigt und sein Einverständnis gibt, mit diesem Markt verbunden zu werden. Frage zum Beispiel: \"Möchten Sie mit dem Markt in Marienfelde verbunden werden?\""
+    ],
+    "guardrails": {
+      "custom": [
+        {
+          "instruction": "Mache keine Preiszusagen",
+          "enabled": true
+        },
+        {
+          "instruction": "Blockiere Anfragen nach medizinischer Diagnose, Behandlung oder\npersonalisierten Diätplänen. Antworte: \"Ich kann dazu keine medizinische\nBeratung geben. Bitte sprich mit einer Ärztin/einem Arzt oder prüfe die\nZutaten-/Allergenangaben auf der Verpackung.\"",
+          "enabled": true
+        },
+        {
+          "instruction": "Rede nicht schlecht über andere Marken oder Produktmarken.",
+          "enabled": true
+        },
+        {
+          "instruction": "Keine Angaben zu Konkurrenz",
+          "enabled": true
+        }
+      ]
+    },
+    "tools": [
+      {
+        "name": "Produktinformation",
+        "description": "Dieses Wissen umfasst Informationen zu verschiedenen, in \"Mustermarkt\" Märkten verkäuflichen Produkten.",
+        "inputInstructions": [
+          "Frage nach der Produktmarke und dem Hersteller zusätzlich zum Produktnamen um das richtige Wissensdokument zu finden.",
+          "Enthalten sind Produkte, die Hersteller der Produkt, Gewicht und Informationen zu Zutaten, Verträglichkeiten.",
+          "Nicht enthalten sind Informationen zu Preisen, Marktverfügbarkeit oder Verfügbarkeit generell."
+        ],
+        "outputInstructions": [
+          {
+            "when": "lambda result: len(result) == 0",
+            "then": "Leider habe ich nichts gefunden. Kann ich Ihnen noch anderweitig helfen?"
+          },
+          {
+            "when": "lambda result: len(result) > 0",
+            "then": "Hat das Ihre Frage beantwortet?"
+          }
+        ],
+        "targetId": "9c1ec98a-1210-469f-b071-189e387b4211",
+        "targetName": "Georgy Metro Demo",
+        "type": "KnowledgeSetting"
+      },
+      {
+        "name": "Find next market based on location",
+        "description": "Find nearest market based on customer postal code",
+        "inputInstructions": [],
+        "outputInstructions": [],
+        "type": "DataAction",
+        "targetId": "custom_-_e8497a71-2c21-4dba-a318-548e045054ad",
+        "targetName": "Get Market by PLZ from table",
+        "inputs": [
+          {
+            "targetName": "plz",
+            "type": "PostalCode",
+            "source": "User",
+            "required": false,
+            "fallbackToUser": false,
+            "fallbackToTool": false
+          }
+        ],
+        "output": "Marketname",
+        "schemas": {
+          "inputs": {
+            "title": "Input",
+            "type": "object",
+            "properties": {
+              "plz": {
+                "type": "string"
+              }
+            }
+          },
+          "outputs": {
+            "title": "Output",
+            "type": "object",
+            "required": [
+              "nearest_market_name"
+            ],
+            "properties": {
+              "nearest_market_name": {
+                "type": "string"
+              },
+              "nearest_market_plz": {
+                "type": "string"
+              },
+              "nearest_market_city": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "types": [
+      {
+        "name": "PostalCode",
+        "description": "5-stellige Postleitzahl des Kunden",
+        "direction": "input",
+        "type": "string"
+      },
+      {
+        "name": "Marketname",
+        "description": "Name and details of the nearest market",
+        "direction": "output",
+        "type": "object",
+        "properties": [
+          {
+            "name": "nearest_market_name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "nearest_market_plz",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "nearest_market_city",
+            "type": "string",
+            "required": false
+          }
+        ]
+      },
+      {
+        "name": "KundenAnliegen",
+        "description": "Wobei braucht der Kunde Hilfe?",
+        "type": "string"
+      },
+      {
+        "name": "KundePlz",
+        "description": "",
+        "type": "string"
+      },
+      {
+        "name": "ZweiterKontakt",
+        "description": "Wenn Ja, dann hat der Kunde dich vor Kurzem bereits kontaktiert. Wenn nein, dann gab es in der letzten Woche keinen Kontakt.",
+        "type": "boolean"
+      },
+      {
+        "name": "ProduktTyp",
+        "description": "Der Produkttyp über den der Kunde eine Frage hat, zum Beispiel Käse, Parmesan, Joghurt etc.",
+        "type": "string"
+      },
+      {
+        "name": "InputData",
+        "direction": "agentInput",
+        "type": "object",
+        "properties": [
+          {
+            "name": "kunden_anliegen",
+            "type": "KundenAnliegen",
+            "required": false
+          },
+          {
+            "name": "kunde_plz",
+            "type": "KundePlz",
+            "required": false
+          },
+          {
+            "name": "zweiter_kontakt",
+            "type": "ZweiterKontakt",
+            "required": false
+          },
+          {
+            "name": "produkt_typ",
+            "type": "ProduktTyp",
+            "required": false
+          }
+        ]
+      },
+      {
+        "name": "OutputData",
+        "direction": "agentOutput",
+        "type": "object",
+        "properties": [
+          {
+            "name": "PostalCode",
+            "type": "PostalCode",
+            "required": false
+          },
+          {
+            "name": "Marketname.nearest_market_name",
+            "type": "string",
+            "required": true,
+            "mapping": [
+              "Marketname",
+              "nearest_market_name"
+            ]
+          },
+          {
+            "name": "Marketname.nearest_market_plz",
+            "type": "string",
+            "required": false,
+            "mapping": [
+              "Marketname",
+              "nearest_market_plz"
+            ]
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "message": "Leider kann ich diese Frage nicht beantworten. Kann ich Ihnen noch anderweitig behilflich sein?",
+        "type": "Guardrails",
+        "violationThreshold": 3,
+        "violationThresholdCrossedMessage": "Es tut mir leid, aber dabei kann ich Ihnen nicht helfen."
+      },
+      {
+        "message": "Vielen Dank für Ihre Kontaktaufnahme, wir wünschen Ihnen einen schönen Tag!",
+        "type": "UserExit"
+      },
+      {
+        "message": "Bitte warten Sie, während ich Sie weiterverbinde.",
+        "type": "Escalation"
+      }
+    ],
+    "configuration": {
+      "comfortStatement": {
+        "enabled": true
+      }
+    }
+  }
+}
