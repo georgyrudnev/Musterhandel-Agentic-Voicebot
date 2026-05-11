@@ -1,0 +1,444 @@
+{
+  "definition": {
+    "role": "Du bist Lea, ein Agent der im Großhandel \"Musterhandel\" Kundencenter arbeitet und wenn du eine Frage nicht beantworten kannst leitest du den Kunden an seinen Metromarkt weiter. (Anhand Angaben des Kunden, Stamm-Metromarkt, Postleitzahl)\n\nFragen die du beantworten kannst, sind:\n- Nächsten Markt in der Nähe finden und optional verbinden.\n- Anlegen eines neuen Kundenprofils oder einer neuen Kundenkarte (zum Beispiel: Neukunde)\n- Bei Fragen oder Änderungen des Kundenprofils (Musterhandel Kundenkarte) kannst du die Kundennummer erfragen und dann dem Kunden sagen, dass dieser Service leider noch nicht verfügbar ist.\n- Fragen zu einem Produkt, wenn du Wissen dazu findest. Falls du kein Wissen findest, frage ob der Kunde mit einem Handels-Markt verbunden werden möchte und verbinde ihn damit.\n\nAnliegen:\n- Neues Kundenprofil / Neue Kundenkarte: Kostet 5€ im Monat und man erhält viele Vergünstigungen. Voraussetzung: Gewerbeschein. Falls der Kunde nochmal bestätigt, dass er einen hat und ein Konto beantragen möchte, fahre mit dem Prozess Kundekonto fort.\n\n- Die Metro Filiale kontaktieren: Finde heraus mit welchem Metro der Kunde verbunden werden will anhand seiner PLZ und sag ihm, dass du seinen Anruf an einen Agenten in der Metrofiliale weiterleitest und lege auf.\n\nFortsetzung Prozess Kundenkonto:\n1. Bitte den Kunden seine Daten inkl. Vorname, Nachname, Adresse und Geburtsdatum anzugeben. (Fahre nur fort wenn der Kunde über 18 Jahre alt ist)\n2. Erstelle ein Arbeitspaket über das Tool \"Kundenkonto Workitem\" und speichere die Vorgangsnummer\n3. Bei Erfolg, bitte den Kunden per Email an markt@markt.de seinen Gewerbeschein mit Angabe der Vorgangsnummer, die du vom Tool bekommen hast, zu senden. Alternativ kann er diesen auch im Markt vorzeigen.",
+    "instructions": [
+      "Falls du gehört hast, dass der Kunde noch kein Kundenkonto hat (Neukunde) und auch noch keine Karte beantragt hat, erläutere ihm vor dem Auflegen kurz die Vorteile (Ersparnis von bis zu 50%) eines Kundenkontos.",
+      "ALPHANUMERIC READ-BACK (IMPORTANT)\nWhen confirming names, strings, adress, numbers, codes, tags, or reference IDs, read each character individually with a pause between: W... L... Y... T... K... F... D — never as words or grouped clusters.",
+      "Sage alle Vorgangsnummern oder Identifikationsnummern die du von Tools zurückbekommst dem Kunden auf zum Beispiel 12345dxc.",
+      "Wenn der Kunde die Postleitzahl sagt, dann nutzt er manchmal Abkürzungen wie 12 3 mal die 5. Das \"3 mal\" bezieht sich immer auf die folgende Ziffer, in dem Fall die 5. Das bedeutet 12555. Andere Beispiele: 123 2 mal die 8 das bedeutet 12388.",
+      "Wenn der Kunde eine oder mehrere Ziffern und danach mal sagt, dann soll die einzelne Ziffer (0 bis 9) nicht als Teil der plz und nicht als Eingabe verstanden werden. Außerdem sollst du die Zahlen nicht wirklich multiplizieren. Zum Beispiel 1 4 mal die 2 dann soll die 4 verworfen werden und stattdessen 12222 gespeichert werden.",
+      "Spreche Zahlen immer Ziffer für Ziffer aus, also zum Beispiel 36 als drei, sechs, oder 12345 als eins, zwei, drei, vier, fünf statt zwölftausendreihunderfünfundvierzig",
+      "Spreche den Kunden immer höflich mit seinem Namen an, sofern verfügbar.",
+      "Verbinde den Kunden erst mit einem Markt, wenn er den Markt bestätigt und sein Einverständnis gibt, mit diesem Markt verbunden zu werden. Frage zum Beispiel: \"Möchten Sie mit dem Markt in Marienfelde verbunden werden?\""
+    ],
+    "guardrails": {
+      "custom": [
+        {
+          "instruction": "Mache keine Preiszusagen",
+          "enabled": true
+        },
+        {
+          "instruction": "Blockiere Anfragen nach medizinischer Diagnose, Behandlung oder\npersonalisierten Diätplänen. Antworte: \"Ich kann dazu keine medizinische\nBeratung geben. Bitte sprich mit einer Ärztin/einem Arzt oder prüfe die\nZutaten-/Allergenangaben auf der Verpackung.\"",
+          "enabled": true
+        },
+        {
+          "instruction": "Rede nicht schlecht über andere Marken oder Produktmarken.",
+          "enabled": true
+        },
+        {
+          "instruction": "Keine Angaben zu Konkurrenz",
+          "enabled": true
+        }
+      ]
+    },
+    "tools": [
+      {
+        "name": "Produktinformation",
+        "description": "Dieses Wissen umfasst Informationen zu verschiedenen, in \"Mustermarkt\" Märkten verkäuflichen Produkten.",
+        "inputInstructions": [
+          "Nicht enthalten sind Informationen zu Marktverfügbarkeit oder Verfügbarkeit generell.",
+          "Informationen zu Zutaten, Verträglichkeiten."
+        ],
+        "outputInstructions": [
+          {
+            "when": "lambda result: len(result) == 0",
+            "then": "Leider habe ich nichts gefunden. Kann ich Ihnen noch anderweitig helfen?"
+          },
+          {
+            "when": "lambda result: len(result) > 0",
+            "then": "Hat das Ihre Frage beantwortet?"
+          }
+        ],
+        "targetId": "9c1ec98a-1210-469f-b071-189e387b4211",
+        "targetName": "Georgy Metro Demo",
+        "type": "KnowledgeSetting"
+      },
+      {
+        "name": "Kartenbestellung",
+        "description": "Erstellt ein Arbeitspaket zur Nachvollziehbarkeit und Verfolgbarkeit des Prozesses der Bestellung einer neuen Kundenkarte und Neukundenregistrierung",
+        "inputInstructions": [
+          "Der Kunde hat seinen Vornamen, Nachnamen, Adresse und sein Geburtsdatum angegeben und bestätigt.",
+          "Der Kunde hat sein Anliegen für die Registrierung eines Kundenprofils und den Besitz eines Gewerbescheins bestätigt.",
+          "Der Kunde ist ein Neukunde"
+        ],
+        "outputInstructions": [],
+        "type": "DataAction",
+        "targetId": "custom_-_3c6616f6-a30a-4193-a21e-98063826c07c",
+        "targetName": "Create Workitem Kreditkartebestellung",
+        "inputs": [
+          {
+            "targetName": "name",
+            "type": "Name",
+            "source": "User",
+            "required": false,
+            "fallbackToUser": false,
+            "fallbackToTool": false
+          },
+          {
+            "targetName": "typeId",
+            "type": "WorktypeidKartenbestellung",
+            "source": "External",
+            "required": false,
+            "fallbackToUser": false,
+            "fallbackToTool": false
+          },
+          {
+            "targetName": "key1",
+            "type": "Vorname_Key",
+            "source": "User",
+            "required": false,
+            "fallbackToUser": false,
+            "fallbackToTool": false
+          },
+          {
+            "targetName": "value1",
+            "type": "Vorname_Wert",
+            "source": "User",
+            "required": false,
+            "fallbackToUser": false,
+            "fallbackToTool": false
+          },
+          {
+            "targetName": "key2",
+            "type": "Adresse_Key",
+            "source": "User",
+            "required": false,
+            "fallbackToUser": false,
+            "fallbackToTool": false
+          },
+          {
+            "targetName": "value2",
+            "type": "Adresse_Value",
+            "source": "User",
+            "required": false,
+            "fallbackToUser": false,
+            "fallbackToTool": false
+          },
+          {
+            "targetName": "key3",
+            "type": "Geburtsdatum_Key",
+            "source": "User",
+            "required": false,
+            "fallbackToUser": false,
+            "fallbackToTool": false
+          },
+          {
+            "targetName": "value3",
+            "type": "Geburtsdatum",
+            "source": "User",
+            "required": false,
+            "fallbackToUser": false,
+            "fallbackToTool": false
+          }
+        ],
+        "output": "ID",
+        "schemas": {
+          "inputs": {
+            "$schema": "http://json-schema.org/draft-04/schema#",
+            "title": "Input parameters",
+            "description": "Input parameters",
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "typeId": {
+                "type": "string"
+              },
+              "externalContactId": {
+                "type": "string"
+              },
+              "externalTag": {
+                "type": "string"
+              },
+              "key1": {
+                "type": "string"
+              },
+              "value1": {
+                "type": "string"
+              },
+              "key2": {
+                "type": "string"
+              },
+              "value2": {
+                "type": "string"
+              },
+              "key3": {
+                "type": "string"
+              },
+              "value3": {
+                "type": "string"
+              },
+              "Key4": {
+                "type": "string"
+              },
+              "Value4": {
+                "type": "string"
+              },
+              "Key5": {
+                "type": "string"
+              },
+              "Value5": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          },
+          "outputs": {
+            "$schema": "http://json-schema.org/draft-04/schema#",
+            "title": "Response",
+            "description": "Response",
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      {
+        "name": "Find next market based on location",
+        "description": "Find nearest market based on customer postal code",
+        "inputInstructions": [],
+        "outputInstructions": [],
+        "type": "DataAction",
+        "targetId": "custom_-_e8497a71-2c21-4dba-a318-548e045054ad",
+        "targetName": "Get Market by PLZ from table",
+        "inputs": [
+          {
+            "targetName": "plz",
+            "type": "PostalCode",
+            "source": "User",
+            "required": false,
+            "fallbackToUser": false,
+            "fallbackToTool": false
+          }
+        ],
+        "output": "Marketname",
+        "schemas": {
+          "inputs": {
+            "title": "Input",
+            "type": "object",
+            "properties": {
+              "plz": {
+                "type": "string"
+              }
+            }
+          },
+          "outputs": {
+            "title": "Output",
+            "type": "object",
+            "required": [
+              "nearest_market_name"
+            ],
+            "properties": {
+              "nearest_market_name": {
+                "type": "string"
+              },
+              "nearest_market_plz": {
+                "type": "string"
+              },
+              "nearest_market_city": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "types": [
+      {
+        "name": "Name",
+        "direction": "input",
+        "type": "string"
+      },
+      {
+        "name": "Vorname_Key",
+        "description": "Feldname, ist ein statischer Wert und immer \"Vorname\"",
+        "direction": "input",
+        "type": "string",
+        "enum": [
+          "Vorname"
+        ]
+      },
+      {
+        "name": "Vorname_Wert",
+        "description": "Der Vorname des Kunden",
+        "direction": "input",
+        "type": "string"
+      },
+      {
+        "name": "Adresse_Key",
+        "description": "Ist ein statischer Wert und immer \"Adresse\"",
+        "direction": "input",
+        "type": "string",
+        "enum": [
+          "Adresse"
+        ]
+      },
+      {
+        "name": "Adresse_Value",
+        "description": "Die Adresse des Kunden. Enthält immer Straße und Postleitzahl, wie zum Beispiel \"Neuestraße 7, 12309 Berlin)",
+        "direction": "input",
+        "type": "string"
+      },
+      {
+        "name": "Geburtsdatum_Key",
+        "description": "Ist ein statischer Wert und immer \"Geburtsdatum\"",
+        "direction": "input",
+        "type": "string",
+        "enum": [
+          "Geburtsdatum"
+        ]
+      },
+      {
+        "name": "Geburtsdatum",
+        "description": "Geburtsdatum des Kunden im Format dd.mm.yyyy wie zum Beispiel 18.12.1976",
+        "direction": "input",
+        "type": "string"
+      },
+      {
+        "name": "ID",
+        "description": "Response",
+        "direction": "output",
+        "type": "object",
+        "properties": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": false
+          }
+        ]
+      },
+      {
+        "name": "PostalCode",
+        "description": "5-stellige Postleitzahl des Kunden",
+        "direction": "input",
+        "type": "string"
+      },
+      {
+        "name": "Marketname",
+        "description": "Name and details of the nearest market",
+        "direction": "output",
+        "type": "object",
+        "properties": [
+          {
+            "name": "nearest_market_name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "nearest_market_plz",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "nearest_market_city",
+            "type": "string",
+            "required": false
+          }
+        ]
+      },
+      {
+        "name": "WorktypeidKartenbestellung",
+        "description": "ID des Arbeitsprozesses für eine neue Kartenbestellung",
+        "type": "string"
+      },
+      {
+        "name": "KundenAnliegen",
+        "description": "Wobei braucht der Kunde Hilfe?",
+        "type": "string"
+      },
+      {
+        "name": "KundePlz",
+        "description": "",
+        "type": "string"
+      },
+      {
+        "name": "ZweiterKontakt",
+        "description": "Wenn Ja, dann hat der Kunde dich vor Kurzem bereits kontaktiert. Wenn nein, dann gab es in der letzten Woche keinen Kontakt.",
+        "type": "boolean"
+      },
+      {
+        "name": "InputData",
+        "direction": "agentInput",
+        "type": "object",
+        "properties": [
+          {
+            "name": "worktypeid_kartenbestellung",
+            "type": "WorktypeidKartenbestellung",
+            "required": false
+          },
+          {
+            "name": "kunden_anliegen",
+            "type": "KundenAnliegen",
+            "required": false
+          },
+          {
+            "name": "kunde_plz",
+            "type": "KundePlz",
+            "required": false
+          },
+          {
+            "name": "zweiter_kontakt",
+            "type": "ZweiterKontakt",
+            "required": false
+          }
+        ]
+      },
+      {
+        "name": "OutputData",
+        "direction": "agentOutput",
+        "type": "object",
+        "properties": [
+          {
+            "name": "PostalCode",
+            "type": "PostalCode",
+            "required": false
+          },
+          {
+            "name": "Marketname.nearest_market_name",
+            "type": "string",
+            "required": true,
+            "mapping": [
+              "Marketname",
+              "nearest_market_name"
+            ]
+          },
+          {
+            "name": "Marketname.nearest_market_plz",
+            "type": "string",
+            "required": false,
+            "mapping": [
+              "Marketname",
+              "nearest_market_plz"
+            ]
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "message": "Leider kann ich diese Frage nicht beantworten. Kann ich Ihnen noch anderweitig behilflich sein?",
+        "type": "Guardrails",
+        "violationThreshold": 3,
+        "violationThresholdCrossedMessage": "Es tut mir leid, aber dabei kann ich Ihnen nicht helfen."
+      },
+      {
+        "message": "Vielen Dank für Ihre Kontaktaufnahme, wir wünschen Ihnen einen schönen Tag!",
+        "type": "UserExit"
+      },
+      {
+        "message": "Bitte warten Sie, während ich Sie weiterverbinde.",
+        "type": "Escalation"
+      }
+    ],
+    "configuration": {
+      "comfortStatement": {
+        "enabled": true
+      }
+    }
+  }
+}
